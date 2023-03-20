@@ -11,17 +11,22 @@ import PlansPage from './pages/PlansPage';
 import VpnPage from './pages/VpnPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import DashboardAppPage from './pages/DashboardAppPage';
-import RequiredAuth from './layouts/RequireAuth';
+// import RequiredAuth from './layouts/RequireAuth';
 // ----------------------------------------------------------------------
 
 export default function Router() {
   const routes = useRoutes([
     {
+      path: '/',
+      element: <Navigate to="/login" />,
+      index: true,
+    },
+    {
       path: '/dashboard',
       element: (
-        <RequiredAuth>
-          <DashboardLayout />
-        </RequiredAuth>
+        // <RequiredAuth>
+        <DashboardLayout />
+        // </RequiredAuth>
       ),
       children: [
         { element: <Navigate to="/dashboard/app" />, index: true },
@@ -33,7 +38,7 @@ export default function Router() {
       ],
     },
     {
-      path: 'login',
+      path: '/login',
       element: <LoginPage />,
     },
     {

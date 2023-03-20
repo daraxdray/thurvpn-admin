@@ -43,13 +43,14 @@ export default function LoginPage() {
 
       <StyledRoot>
         <Container maxWidth="sm">
-          <Box sx={{ mx: 'auto', width: 500, padding: 1 }}>
+          <Box sx={{ mx: 'auto', width: 'auto', padding: 1 }}>
             <Card sx={{ px: 5, mt: 5 }}>
               <StyledContent>
                 <Logo
                   sx={{
                     position: 'relative',
                     margin: 'auto',
+                    marginBottom: 5,
                   }}
                 />
 

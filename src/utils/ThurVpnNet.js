@@ -1,14 +1,12 @@
-import axios, {AxiosError, AxiosResponse} from 'axios';
+import axios from 'axios';
 
-
-export const baseUrl =  `https://api.thurvpn.com/`;
+export const baseUrl = `http://localhost:2023/api/`;
 // const baseUrl = 'https://9c77-105-112-225-134.eu.ngrok.io/v1/app/';
-export const connect = (token) =>
+export const connect = () =>
   axios.create({
     baseURL: baseUrl,
     headers: {
       'Content-type': 'application/json',
-      Authorization: 'Bearer ' + token,
     },
   });
 
@@ -26,9 +24,8 @@ export const handler = (response) => {
 
   // const status: number = result.response?.status || 400;
   if (result.status >= 300 && result.status <= 399)
-    throw {status: false, msg: 'Your request got redirected', data: {}};
-  else if (result.status >= 400 && result.status <= 499)
-    throw {status: false, msg: 'Wrong Input Format', data: {}};
+    throw { status: false, msg: 'Your request got redirected', data: {} };
+  else if (result.status >= 400 && result.status <= 499) throw { status: false, msg: 'Wrong Input Format', data: {} };
   else if (result.status >= 500)
     throw {
       status: false,
@@ -41,17 +38,13 @@ export const handler = (response) => {
 export const errorHandler = (result) => {
   const status = result.response?.status ?? 500;
 
-  console.log('API_ERROR', result.response?.data);
+  console.log('API_ERROR', result);
   // const status: number = result.response?.status || 400;
   if (status >= 300 && status <= 399) {
     // console.log({status: status, msg: 'Your request got redirected', data: {}});
     throw result;
   } else if (status >= 400 && status <= 499) {
-    if (status == 401) {
-      remove('token').then();
-    }
-    // console.log({status: status, msg: 'Wrong Input Format', data: {}});
-    throw result;
+    throw result.response.data;
   } else if (status >= 500) {
     // console.log({
     //   status: status,
@@ -61,5 +54,5 @@ export const errorHandler = (result) => {
     throw result;
   }
 
-  throw result;
+  throw { data: null, message: result.message, status: false };
 };

@@ -1,8 +1,17 @@
 import ApiRoutes from '../utils/ApiRoutes';
-import { baseUrl, connect, errorHandler, handler } from '../utils/ThurVpnNet';
+import { connect, errorHandler, handler } from '../utils/thurVpnNet';
 
-export const sendOTP = async (username) => {
-  const res = await connect('').post(ApiRoutes.login, { username, password });
+// export const sendOTP = async (username) => {
+//   const res = await connect('').post(ApiRoutes.login, { username, password });
+// };
+export const adminLogin = async (email, password) => {
+  try {
+    const res = await connect().post(ApiRoutes.login, { email, password });
+
+    return handler(res);
+  } catch (error) {
+    errorHandler(error);
+  }
 };
 
 export const getUserData = async (token) => {
@@ -14,8 +23,6 @@ export const getUserData = async (token) => {
       if (result != null && result.data != null) {
         return result.data;
       }
-      await remove('token');
-      await remove('secureToken');
     }
     return {};
   } catch (e) {
