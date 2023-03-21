@@ -1,9 +1,6 @@
-import ApiRoutes from '../utils/ApiRoutes';
 import { connect, errorHandler, handler } from '../utils/thurVpnNet';
+import ApiRoutes from '../utils/ApiRoutes';
 
-// export const sendOTP = async (username) => {
-//   const res = await connect('').post(ApiRoutes.login, { username, password });
-// };
 export const adminLogin = async (email, password) => {
   try {
     const res = await connect().post(ApiRoutes.login, { email, password });
