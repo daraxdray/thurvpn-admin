@@ -1,4 +1,4 @@
-import { connect, errorHandler, handler } from '../utils/thurVpnNet';
+import { connect, errorHandler, handler } from '../utils/ThurVpnNet';
 import ApiRoutes from '../utils/ApiRoutes';
 
 export const adminLogin = async (email, password) => {
