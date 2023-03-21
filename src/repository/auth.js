@@ -11,7 +11,7 @@ export const adminLogin = async (email, password) => {
   }
 };
 
-export const getUserData = async (token) => {
+export const getUserData = async (token) =>   {
   // token = (await getItem('token')) ?? (await getItem('secureToken'));
   try {
     if (token != null || token != '') {
