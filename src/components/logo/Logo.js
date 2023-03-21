@@ -2,27 +2,29 @@ import PropTypes from 'prop-types';
 import { forwardRef } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 // @mui
-import { useTheme } from '@mui/material/styles';
+// import { useTheme } from '@mui/material/styles';
 import { Box, Link } from '@mui/material';
 
 // ----------------------------------------------------------------------
 
 const Logo = forwardRef(({ disabledLink = false, sx, ...other }, ref) => {
-  const theme = useTheme();
+  // const theme = useTheme();
 
-  const PRIMARY_LIGHT = theme.palette.primary.light;
+  // const PRIMARY_LIGHT = theme.palette.primary.light;
 
-  const PRIMARY_MAIN = theme.palette.primary.main;
+  // const PRIMARY_MAIN = theme.palette.primary.main;
 
-  const PRIMARY_DARK = theme.palette.primary.dark;
+  // const PRIMARY_DARK = theme.palette.primary.dark;
 
   // OR using local (public folder)
   // -------------------------------------------------------
   const logo = (
     <Box
+      ref={ref}
       component="img"
       src="/thur_logo.png"
-      sx={{ width: 120, height: 40, cursor: 'pointer', ...sx }}
+      sx={{ width: 120, height: 40, cursor: 'pointer', ...sx,  }}
+      {...other}
     />
   );
 
@@ -90,4 +92,5 @@ Logo.propTypes = {
   disabledLink: PropTypes.bool,
 };
 
+Logo.displayName = "Logo";
 export default Logo;

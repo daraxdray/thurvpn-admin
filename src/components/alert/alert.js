@@ -13,4 +13,5 @@ ThurAlert.propTypes = {
   message: PropTypes.string,
 };
 
+ThurAlert.displayName = "ThurAlert";
 export default ThurAlert;
