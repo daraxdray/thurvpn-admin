@@ -1,7 +1,7 @@
 // @mui
 import PropTypes from 'prop-types';
 import { alpha, styled } from '@mui/material/styles';
-import { Card, Typography, Stack ,Box} from '@mui/material';
+import { Card, Typography, Box} from '@mui/material';
 // utils
 import { fShortenNumber } from '../../../utils/formatNumber';
 // components
