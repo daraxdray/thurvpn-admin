@@ -35,7 +35,7 @@ import { TableListHead, TableListToolbar } from '../components/table-component';
 const TABLE_HEAD = [
   { id: 'country', label: 'Country', alignRight: false },
   { id: 'code', label: 'Code', alignRight: false },
-  { id: 'unicode', label: 'Price', alignRight: false },
+  { id: 'unicode', label: 'Unicode', alignRight: false },
   { id: 'regions', label: 'Regions', alignRight: false },
   { id: 'date', label: 'Date', alignRight: false },
   { id: 'status', label: 'Status', alignRight: false },
