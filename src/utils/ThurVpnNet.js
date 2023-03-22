@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-export const baseUrl = `http://localhost:2023/api/`;
+export const baseUrl = `https://api.thurvpn.com/api/`;
+// `http://localhost:2023/api/`;
 // const baseUrl = 'https://9c77-105-112-225-134.eu.ngrok.io/v1/app/';
 export const connect = () =>
   axios.create({
