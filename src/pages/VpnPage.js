@@ -165,7 +165,7 @@ export default function VPNPage() {
           </Typography>
 
           <Button variant="contained" startIcon={<Iconify icon="eva:plus-fill" />}>
-            New Plan
+            Create
           </Button>
         </Stack>
 

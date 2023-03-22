@@ -153,7 +153,7 @@ export default function ProductsPage() {
           </Typography>
 
           <Button variant="contained" startIcon={<Iconify icon="eva:plus-fill" />}>
-            New Plan
+            Create
           </Button>
         </Stack>
         <Card>
