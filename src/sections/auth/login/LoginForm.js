@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 // @mui
-import { Stack, IconButton, InputAdornment, TextField } from '@mui/material';
+import { Stack, IconButton, InputAdornment, TextField, Button, Box } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import { adminLogin } from '../../../repository/auth';
 // components
@@ -23,7 +23,7 @@ export default function LoginForm() {
   const emailChange = (e) => setEmail(e.target.value);
   const pwChange = (e) => setPassword(e.target.value);
   const handleClick = async () => {
-    if (email != 'demo' && password != 'demo') {
+    if (email != 'demo@thursvpn.com' && password != 'demopass') {
       try {
         const loggedIn = await adminLogin(email, password);
         console.log('opo', from);
@@ -37,14 +37,19 @@ export default function LoginForm() {
     }
   };
 
+  const setDemos = ()=>{
+    setEmail("demo@thursvpn.com")
+    setPassword("demopass")
+  }
   return (
     <>
       <Stack spacing={3} sx={{ my: 2 }}>
         {response && <ThurAlert severe={response.status ? 'success' : 'error'} message={response.message} />}
-        <TextField name="email" label="Email address" onChange={emailChange} />
+        <TextField name="email" label="Email address" onChange={emailChange} value={email} />
         <TextField
           name="password"
           label="Password"
+          value={password}
           type={showPassword ? 'text' : 'password'}
           onChange={pwChange}
           InputProps={{
@@ -76,6 +81,9 @@ export default function LoginForm() {
       >
         Login
       </LoadingButton>
+      <Box>
+      <Button sx={{mt:5}} onClick={()=>setDemos()}>Click to Fill Form</Button>
+      </Box>
     </>
   );
 }

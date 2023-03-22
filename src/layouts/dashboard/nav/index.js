@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 // @mui
 // import { styled, alpha } from '@mui/material/styles';
-import { Box, Link, Drawer, Typography } from '@mui/material';
+import { Box, Link, Drawer, Typography, Divider } from '@mui/material';
 // mock
 // import account from '../../../_mock/account';
 // hooks
@@ -54,7 +54,7 @@ export default function Nav({ openNav, onCloseNav }) {
       }}
     >
       <Box sx={{ px: 2.5, py: 3, display: 'inline-flex' }}>
-        <Logo />
+        <Logo  />
       </Box>
 
       <Box sx={{ mb: 2, mx: 2.5, mt: 4 }}>
@@ -66,7 +66,8 @@ export default function Nav({ openNav, onCloseNav }) {
       </Box>
 
       <NavSection data={navConfig} />
-      <Box sx={{ flexGrow: 1 }} />
+      <Divider sx={{ borderStyle: 'dashed', mt: 20 }} />
+
       <NavSection data={bottomNavConfig} />
 
       <Box sx={{ flexGrow: 1 }} />
