@@ -26,7 +26,7 @@ import {
 } from '@mui/material';
 import Label from '../components/label';
 import Iconify from '../components/iconify';
-import Scrollbar from '../components/scrollbar';
+// import Scrollbar from '../components/scrollbar';
 import { useQuery } from '@tanstack/react-query';
 // sections
 import { TableListHead, TableListToolbar } from '../components/table-component';
@@ -183,7 +183,7 @@ export default function VPNPage() {
               onFilterProp={handleFilterByCountry}
             />
 
-            <Scrollbar>
+            
               <TableContainer sx={{ minWidth: 800 }}>
                 <Table>
                   <TableListHead
@@ -199,7 +199,7 @@ export default function VPNPage() {
                     {filteredVpn.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
                       const { _id: id, country, countryCode, status, countryImage, regions, unicode } = row;
                       const selectedUser = selected.indexOf(country) !== -1;
-                       console.log(row) 
+                      
                       return (
                         <TableRow hover key={id} tabIndex={-1} role="checkbox" selected={selectedUser}>
                           <TableCell padding="checkbox">
@@ -265,7 +265,7 @@ export default function VPNPage() {
                   )}
                 </Table>
               </TableContainer>
-            </Scrollbar>
+            
 
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}

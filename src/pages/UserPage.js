@@ -31,7 +31,7 @@ import { AppWidgetSummary } from '../sections/@dashboard/app';
 // components
 import Label from '../components/label';
 import Iconify from '../components/iconify';
-import Scrollbar from '../components/scrollbar';
+// import Scrollbar from '../components/scrollbar';
 // sections
 import { TableListHead, TableListToolbar } from '../components/table-component';
 
@@ -239,7 +239,7 @@ export default function UserPage() {
               onFilterName={handleFilterByEmail}
             />
 
-            <Scrollbar>
+            
               <TableContainer sx={{ minWidth: 800 }}>
                 <Table>
                   <TableListHead
@@ -274,7 +274,7 @@ export default function UserPage() {
                             </Stack>
                           </TableCell>
 
-                          <TableCell align="left">{device?.deviceName ?? 'No ID'}</TableCell>
+                          <TableCell align="left">{device?.deviceName ?? 'No Device'}</TableCell>
 
                           <TableCell align="left">{device?.deviceId ?? 'No ID'}</TableCell>
 
@@ -324,7 +324,7 @@ export default function UserPage() {
                   )}
                 </Table>
               </TableContainer>
-            </Scrollbar>
+            
 
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}

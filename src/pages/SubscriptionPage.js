@@ -24,7 +24,7 @@ import {
 } from '@mui/material';
 import Label from '../components/label';
 import Iconify from '../components/iconify';
-import Scrollbar from '../components/scrollbar';
+
 // sections
 import { TableListHead, TableListToolbar } from '../components/table-component';
 // mock
@@ -159,7 +159,7 @@ export default function ProductsPage() {
         <Card>
           <TableListToolbar numSelected={selected.length} filterName={filterName} onFilterName={handleFilterByName} />
 
-          <Scrollbar>
+          
             <TableContainer sx={{ minWidth: 800 }}>
               <Table>
                 <TableListHead
@@ -241,7 +241,7 @@ export default function ProductsPage() {
                 )}
               </Table>
             </TableContainer>
-          </Scrollbar>
+          
 
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
