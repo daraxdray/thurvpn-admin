@@ -11,7 +11,7 @@ import PlansPage from './pages/PlansPage';
 import VpnPage from './pages/VpnPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import DashboardAppPage from './pages/DashboardAppPage';
-// import RequiredAuth from './layouts/RequireAuth';
+import RequireAuth from './layouts/RequireAuth';
 // ----------------------------------------------------------------------
 
 export default function Router() {
@@ -24,13 +24,13 @@ export default function Router() {
     {
       path: '/dashboard',
       element: (
-        // <RequiredAuth>
-        <DashboardLayout />
-        // </RequiredAuth>
+        <RequireAuth>
+          <DashboardLayout />
+        </RequireAuth> 
       ),
       children: [
-        { element: <Navigate to="/dashboard/app" />, index: true },
-        { path: 'app', element: <DashboardAppPage /> },
+       
+        { path: 'app', element:<DashboardAppPage /> },
         { path: 'user', element: <UserPage /> },
         { path: 'plans', element: <PlansPage /> },
         { path: 'vpn', element: <VpnPage /> },
@@ -44,7 +44,6 @@ export default function Router() {
     {
       element: <SimpleLayout />,
       children: [
-        { element: <Navigate to="/dashboard/app" />, index: true },
         { path: '404', element: <Page404 /> },
         { path: '*', element: <Navigate to="/404" /> },
       ],

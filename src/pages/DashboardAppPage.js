@@ -7,7 +7,7 @@ import { Grid, Container, Typography, CircularProgress } from '@mui/material';
 // components
 // import Iconify from '../components/iconify';
 // sections
-import { AppNewsUpdate, AppOrderTimeline, AppWidgetSummary } from '../sections/@dashboard/app';
+import { ListTile, AppOrderTimeline, AppWidgetSummary } from '../sections/@dashboard/app';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 // ----------------------------------------------------------------------
@@ -183,7 +183,7 @@ export default function DashboardAppPage() {
           </Grid> */}
 
             <Grid item xs={12} md={6} lg={8}>
-              <AppNewsUpdate
+              <ListTile
                 title="Recently joined devices"
                 list={[...Array(5)].map((_, index) => ({
                   id: faker.datatype.uuid(),

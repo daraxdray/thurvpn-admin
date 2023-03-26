@@ -5,28 +5,27 @@ import { Box, Stack, Link, Card, Button, Divider, Typography, CardHeader } from 
 import { fToNow } from '../../../utils/formatTime';
 // components
 import Iconify from '../../../components/iconify';
-import Scrollbar from '../../../components/scrollbar';
+// import Scrollbar from '../../../components/scrollbar';
 
 // ----------------------------------------------------------------------
 
-AppNewsUpdate.propTypes = {
+ListTile.propTypes = {
   title: PropTypes.string,
   subheader: PropTypes.string,
   list: PropTypes.array.isRequired,
 };
 
-export default function AppNewsUpdate({ title, subheader, list, ...other }) {
+export default function ListTile({ title, subheader, list, ...other }) {
   return (
     <Card {...other}>
       <CardHeader title={title} subheader={subheader} />
 
-      <Scrollbar>
+      
         <Stack spacing={3} sx={{ p: 3, pr: 0 }}>
           {list.map((news) => (
             <NewsItem key={news.id} news={news} />
           ))}
         </Stack>
-      </Scrollbar>
 
       <Divider />
 

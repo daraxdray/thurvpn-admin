@@ -4,7 +4,7 @@ import ApiRoutes from '../utils/ApiRoutes';
 export const adminLogin = async (email, password) => {
   try {
     const res = await connect().post(ApiRoutes.login, { email, password });
-
+    
     return handler(res);
   } catch (error) {
     errorHandler(error);
