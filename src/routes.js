@@ -12,9 +12,12 @@ import VpnPage from './pages/VpnPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import DashboardAppPage from './pages/DashboardAppPage';
 import RequireAuth from './layouts/RequireAuth';
+// import { useDispatch } from 'react-redux';
+// import { logout } from './store/slice/authSlice';
 // ----------------------------------------------------------------------
 
 export default function Router() {
+  // const dispatch = useDispatch();
   const routes = useRoutes([
     {
       path: '/',
@@ -29,7 +32,7 @@ export default function Router() {
         </RequireAuth> 
       ),
       children: [
-       
+        { element: <Navigate to="/dashboard/app" />, index: true },
         { path: 'app', element:<DashboardAppPage /> },
         { path: 'user', element: <UserPage /> },
         { path: 'plans', element: <PlansPage /> },
@@ -41,6 +44,15 @@ export default function Router() {
       path: '/login',
       element: <LoginPage />,
     },
+    // {
+    //   path: '/logout',
+    //   element: <Navigate to={'/login'} />,
+    //   render(h) {
+    //     console.log(h);
+    //     dispatch(logout);
+        
+    //   },
+    // },
     {
       element: <SimpleLayout />,
       children: [

@@ -71,7 +71,7 @@ function applySortFilter(array, comparator, query) {
   return stabilizedThis.map((el) => el[0]);
 }
 
-export default function ProductsPage() {
+export default function PlansPage() {
   const [open, setOpen] = useState(null);
   const [PLANLIST, setPlanList] = useState([]);
   const { isSuccess, isFetching } = useQuery({
@@ -159,7 +159,7 @@ export default function ProductsPage() {
         <title> Dashboard: Plans </title>
       </Helmet>
 
-      <Container>
+      <Container maxWidth="xl">
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" sx={{ mb: 5 }}>
             Plans

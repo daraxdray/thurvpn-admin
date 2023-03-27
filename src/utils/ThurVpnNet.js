@@ -3,11 +3,12 @@ import axios from 'axios';
 export const baseUrl =  `http://localhost:2023/api/` ;
 // 'https://api.thurvpn.com/api/';
 
-export const connect = () =>
+export const connect = (token) =>
   axios.create({
     baseURL: baseUrl,
     headers: {
       'Content-type': 'application/json',
+      'Authorization': `Bearer ${token}`
     },
   });
 

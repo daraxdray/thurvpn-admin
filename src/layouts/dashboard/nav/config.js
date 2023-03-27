@@ -45,7 +45,7 @@ const navConfig = [
 const bottomNavConfig = [
   {
     title: 'Logout',
-    path: '/login',
+    path: '/logout',
     icon: 'mdi:lock',
   },
 ];

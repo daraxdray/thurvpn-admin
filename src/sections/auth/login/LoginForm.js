@@ -6,12 +6,13 @@ import {
 // @mui
 import { Stack, IconButton, InputAdornment, TextField, Button, Box } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
-import { adminLogin } from '../../../repository/auth';
+import { adminLogin, getUserData } from '../../../repository/auth';
 // components
 import Iconify from '../../../components/iconify';
 import { useDispatch } from 'react-redux';
 import { loginUserIn } from '../../../store/slice/authSlice'
 import ThurAlert from '../../../components/alert/alert';
+import { useQuery } from '@tanstack/react-query';
 
 // ----------------------------------------------------------------------
 
@@ -23,6 +24,7 @@ export default function LoginForm() {
   const from = location.state?.from?.pathname || '/';
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
+  const [sessionMsg,setSessionMsg] = useState('Checking sessions')
   const [enabled, setEnabled] = useState(true)
   const [password, setPassword] = useState('');
   const [response, setResponse] = useState(null);
@@ -56,9 +58,28 @@ export default function LoginForm() {
     setEmail('demo@thursvpn.com');
     setPassword('Aa@12345');
   };
+
+
+ useQuery(['fetchUser'],getUserData,{
+    onSuccess:(res)=>{
+      dispatch(loginUserIn({user: res}));
+      setSessionMsg('Session is Active, Redirecting in 2sec')
+      setTimeout(()=>{
+        navigate('/dashboard/app', { replace: true });
+      },2000)
+    },
+    onError:(error)=>{
+      console.debug(error);
+      setSessionMsg('Session expired, please login')
+    }
+  })
+  
+
+
   return (
     <>
       <Stack spacing={3} sx={{ my: 2 }}>
+        {sessionMsg && <ThurAlert severe={'info'} message={sessionMsg} />}
         {response && <ThurAlert severe={response.status ? 'success' : 'error'} message={response.message} />}
         <TextField name="email" label="Email address" onChange={emailChange} value={email} />
         <TextField
