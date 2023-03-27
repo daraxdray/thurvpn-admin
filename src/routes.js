@@ -8,10 +8,10 @@ import UserPage from './pages/UserPage';
 import LoginPage from './pages/LoginPage';
 import Page404 from './pages/Page404';
 import PlansPage from './pages/PlansPage';
-import VpnPage from './pages/VpnPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import DashboardAppPage from './pages/DashboardAppPage';
 import RequireAuth from './layouts/RequireAuth';
+import { CreateVpnPage, VpnPage, VPNListPage } from './pages/vpn/index.js';
 // import { useDispatch } from 'react-redux';
 // import { logout } from './store/slice/authSlice';
 // ----------------------------------------------------------------------
@@ -29,14 +29,22 @@ export default function Router() {
       element: (
         <RequireAuth>
           <DashboardLayout />
-        </RequireAuth> 
+        </RequireAuth>
       ),
       children: [
         { element: <Navigate to="/dashboard/app" />, index: true },
-        { path: 'app', element:<DashboardAppPage /> },
+        { path: 'app', element: <DashboardAppPage /> },
         { path: 'user', element: <UserPage /> },
         { path: 'plans', element: <PlansPage /> },
-        { path: 'vpn', element: <VpnPage /> },
+        {
+          path: 'vpn', element: <VpnPage />,
+          children: [
+            { element: <Navigate to="/dashboard/vpn/list" />, index: true },
+            { path: 'list', element: <VPNListPage /> },
+            { path: 'create', element: <CreateVpnPage /> },
+          ]
+        },
+
         { path: 'subscriptions', element: <SubscriptionPage /> },
       ],
     },
@@ -50,7 +58,7 @@ export default function Router() {
     //   render(h) {
     //     console.log(h);
     //     dispatch(logout);
-        
+
     //   },
     // },
     {

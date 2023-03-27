@@ -1,7 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 import { filter } from 'lodash';
 import { useState } from 'react';
-import { getVpnList } from '../repository/vpn';
+import { getVpnList } from '../../repository/vpn';
 
 // @mui
 import {
@@ -24,12 +24,13 @@ import {
   TablePagination,
   CircularProgress,
 } from '@mui/material';
-import Label from '../components/label';
-import Iconify from '../components/iconify';
+import Label from '../../components/label';
+import Iconify from '../../components/iconify';
 // import Scrollbar from '../components/scrollbar';
 import { useQuery } from '@tanstack/react-query';
 // sections
-import { TableListHead, TableListToolbar } from '../components/table-component';
+import { TableListHead, TableListToolbar } from '../../components/table-component';
+import { Link as RouterLink } from 'react-router-dom';
 // mock
 
 const TABLE_HEAD = [
@@ -70,7 +71,7 @@ function applySortFilter(array, comparator, query) {
   return stabilizedThis.map((el) => el[0]);
 }
 
-export default function VPNPage() {
+export default function VPNListPage() {
   const { isSuccess, isFetching } = useQuery({
     queryKey: ['get-vpn'],
     queryFn: getVpnList,
@@ -79,6 +80,7 @@ export default function VPNPage() {
       setVPNLIST(result);
     },
   });
+
   const [VPNLIST, setVPNLIST] = useState([]);
   const [open, setOpen] = useState(null);
 
@@ -164,11 +166,12 @@ export default function VPNPage() {
             VPN
           </Typography>
 
-          <Button variant="contained" startIcon={<Iconify icon="eva:plus-fill" />}>
+          <Button variant="contained" startIcon={<Iconify icon="eva:plus-fill" />} to={'/dashboard/vpn/create'} component={RouterLink}>
             Create
           </Button>
         </Stack>
 
+        
         {isFetching && (
           <Container sx={{ display: 'flex', justifyContent: 'center', alignContent: 'center', mx: 'auto' }}>
             {' '}
