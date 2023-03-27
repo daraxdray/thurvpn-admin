@@ -2,6 +2,9 @@ import { Helmet } from 'react-helmet-async';
 import { sentenceCase } from 'change-case';
 import { filter } from 'lodash';
 import { useState } from 'react';
+import { getUserSubscription } from '../repository/subscription';
+import { useQuery } from '@tanstack/react-query';
+
 // @mui
 import {
   Container,
@@ -21,6 +24,7 @@ import {
   IconButton,
   TableContainer,
   TablePagination,
+  CircularProgress
 } from '@mui/material';
 import Label from '../components/label';
 import Iconify from '../components/iconify';
@@ -55,6 +59,7 @@ function getComparator(order, orderBy) {
 }
 
 function applySortFilter(array, comparator, query) {
+  console.log('arraycv', array);
   const stabilizedThis = array.map((el, index) => [el, index]);
   stabilizedThis.sort((a, b) => {
     const order = comparator(a[0], b[0]);
@@ -67,7 +72,20 @@ function applySortFilter(array, comparator, query) {
   return stabilizedThis.map((el) => el[0]);
 }
 
+
+
+
 export default function ProductsPage() {
+
+  const { isSuccess, isFetching } = useQuery({
+    queryKey: ['get-subscribers'],
+    queryFn: getUserSubscription,
+    onSuccess: (result) => {
+      console.log('data', result);
+      setSubscription(result.users);
+    },
+  });
+
   const [open, setOpen] = useState(null);
 
   const [page, setPage] = useState(0);
@@ -81,6 +99,8 @@ export default function ProductsPage() {
   const [filterName, setFilterName] = useState('');
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const [subscription, setSubscription] = useState([]);
 
   const handleOpenMenu = (event) => {
     setOpen(event.currentTarget);
@@ -136,7 +156,9 @@ export default function ProductsPage() {
 
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - [].length) : 0;
 
-  const filteredUsers = applySortFilter([], getComparator(order, orderBy), filterName);
+  console.log('subscriptionIHHHBVUJV', subscription);
+
+  const filteredUsers = applySortFilter(subscription, getComparator(order, orderBy), filterName);
 
   const isNotFound = !filteredUsers.length && !!filterName;
 
@@ -156,6 +178,15 @@ export default function ProductsPage() {
             Create
           </Button>
         </Stack>
+
+        {isFetching && (
+          <Container sx={{ display: 'flex', justifyContent: 'center', alignContent: 'center', mx: 'auto' }}>
+            {' '}
+            <CircularProgress color="success" sx={{ margin: 'auto' }} />{' '}
+          </Container>
+        )}
+
+        {isSuccess && (
         <Card>
           <TableListToolbar numSelected={selected.length} filterName={filterName} onFilterName={handleFilterByName} />
 
@@ -166,7 +197,7 @@ export default function ProductsPage() {
                   order={order}
                   orderBy={orderBy}
                   headLabel={TABLE_HEAD}
-                  rowCount={[]}
+                  rowCount={subscription.length}
                   numSelected={selected.length}
                   onRequestSort={handleRequestSort}
                   onSelectAllClick={handleSelectAllClick}
@@ -253,6 +284,7 @@ export default function ProductsPage() {
             onRowsPerPageChange={handleChangeRowsPerPage}
           />
         </Card>
+        )}
       </Container>
 
       <Popover
