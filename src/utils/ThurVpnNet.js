@@ -1,7 +1,8 @@
 import axios from 'axios';
 
-export const baseUrl = `http://localhost:2023/api/`;
-// const baseUrl = 'https://9c77-105-112-225-134.eu.ngrok.io/v1/app/';
+export const baseUrl =  `http://localhost:2023/api/` ;
+// 'https://api.thurvpn.com/api/';
+
 export const connect = () =>
   axios.create({
     baseURL: baseUrl,
@@ -17,7 +18,7 @@ export const handler = (response) => {
   if (result.status >= 200 || result.status < 299) {
     return {
       status: result.data.status,
-      msg: result.data.msg,
+      msg: result.data.message,
       data: result.data.data,
     };
   }

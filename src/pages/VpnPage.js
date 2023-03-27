@@ -1,7 +1,8 @@
 import { Helmet } from 'react-helmet-async';
-import { sentenceCase } from 'change-case';
 import { filter } from 'lodash';
 import { useState } from 'react';
+import { getVpnList } from '../repository/vpn';
+
 // @mui
 import {
   Container,
@@ -21,21 +22,23 @@ import {
   IconButton,
   TableContainer,
   TablePagination,
+  CircularProgress,
 } from '@mui/material';
 import Label from '../components/label';
 import Iconify from '../components/iconify';
-import Scrollbar from '../components/scrollbar';
+// import Scrollbar from '../components/scrollbar';
+import { useQuery } from '@tanstack/react-query';
 // sections
-import { UserListHead, UserListToolbar } from '../sections/@dashboard/user';
+import { TableListHead, TableListToolbar } from '../components/table-component';
 // mock
 
 const TABLE_HEAD = [
-  { id: 'name', label: 'Name', alignRight: false },
-  { id: 'validity', label: 'Validity', alignRight: false },
-  { id: 'price', label: 'Price', alignRight: false },
+  { id: 'country', label: 'Country', alignRight: false },
+  { id: 'code', label: 'Code', alignRight: false },
+  { id: 'unicode', label: 'Unicode', alignRight: false },
+  { id: 'regions', label: 'Regions', alignRight: false },
   { id: 'date', label: 'Date', alignRight: false },
   { id: 'status', label: 'Status', alignRight: false },
-  { id: '' },
 ];
 
 function descendingComparator(a, b, orderBy) {
@@ -62,12 +65,21 @@ function applySortFilter(array, comparator, query) {
     return a[1] - b[1];
   });
   if (query) {
-    return filter(array, (_user) => _user.name.toLowerCase().indexOf(query.toLowerCase()) !== -1);
+    return filter(array, (_user) => _user.country.toLowerCase().indexOf(query.toLowerCase()) !== -1);
   }
   return stabilizedThis.map((el) => el[0]);
 }
 
-export default function ProductsPage() {
+export default function VPNPage() {
+  const { isSuccess, isFetching } = useQuery({
+    queryKey: ['get-vpn'],
+    queryFn: getVpnList,
+    onSuccess: (result) => {
+      console.log(result);
+      setVPNLIST(result);
+    },
+  });
+  const [VPNLIST, setVPNLIST] = useState([]);
   const [open, setOpen] = useState(null);
 
   const [page, setPage] = useState(0);
@@ -76,9 +88,9 @@ export default function ProductsPage() {
 
   const [selected, setSelected] = useState([]);
 
-  const [orderBy, setOrderBy] = useState('name');
+  const [orderBy, setOrderBy] = useState('_id');
 
-  const [filterName, setFilterName] = useState('');
+  const [filterCountry, setFilterCountry] = useState('');
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
@@ -98,18 +110,18 @@ export default function ProductsPage() {
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelecteds = [].map((n) => n.name);
+      const newSelecteds = VPNLIST.map((n) => n.country);
       setSelected(newSelecteds);
       return;
     }
-    setSelected([]);
+    setSelected(VPNLIST);
   };
 
-  const handleClick = (event, name) => {
-    const selectedIndex = selected.indexOf(name);
+  const handleClick = (event, country) => {
+    const selectedIndex = selected.indexOf(country);
     let newSelected = [];
     if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selected, name);
+      newSelected = newSelected.concat(selected, country);
     } else if (selectedIndex === 0) {
       newSelected = newSelected.concat(selected.slice(1));
     } else if (selectedIndex === selected.length - 1) {
@@ -129,16 +141,16 @@ export default function ProductsPage() {
     setRowsPerPage(parseInt(event.target.value, 10));
   };
 
-  const handleFilterByName = (event) => {
+  const handleFilterByCountry = (event) => {
     setPage(0);
-    setFilterName(event.target.value);
+    setFilterCountry(event.target.value);
   };
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - [].length) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - VPNLIST.length) : 0;
 
-  const filteredUsers = applySortFilter([], getComparator(order, orderBy), filterName);
+  const filteredVpn = applySortFilter(VPNLIST, getComparator(order, orderBy), filterCountry);
 
-  const isNotFound = !filteredUsers.length && !!filterName;
+  const isNotFound = !filteredVpn.length && !!filterCountry;
 
   return (
     <>
@@ -153,106 +165,119 @@ export default function ProductsPage() {
           </Typography>
 
           <Button variant="contained" startIcon={<Iconify icon="eva:plus-fill" />}>
-            New Plan
+            Create
           </Button>
         </Stack>
-        <Card>
-          <UserListToolbar numSelected={selected.length} filterName={filterName} onFilterName={handleFilterByName} />
 
-          <Scrollbar>
-            <TableContainer sx={{ minWidth: 800 }}>
-              <Table>
-                <UserListHead
-                  order={order}
-                  orderBy={orderBy}
-                  headLabel={TABLE_HEAD}
-                  rowCount={[]}
-                  numSelected={selected.length}
-                  onRequestSort={handleRequestSort}
-                  onSelectAllClick={handleSelectAllClick}
-                />
-                <TableBody>
-                  {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-                    const { id, name, role, status, company, avatarUrl, isVerified } = row;
-                    const selectedUser = selected.indexOf(name) !== -1;
+        {isFetching && (
+          <Container sx={{ display: 'flex', justifyContent: 'center', alignContent: 'center', mx: 'auto' }}>
+            {' '}
+            <CircularProgress color="success" sx={{ margin: 'auto' }} />{' '}
+          </Container>
+        )}
+        {isSuccess && (
+          <Card>
+            <TableListToolbar
+              numSelected={selected.length}
+              filterProp={filterCountry}
+              onFilterProp={handleFilterByCountry}
+            />
 
-                    return (
-                      <TableRow hover key={id} tabIndex={-1} role="checkbox" selected={selectedUser}>
-                        <TableCell padding="checkbox">
-                          <Checkbox checked={selectedUser} onChange={(event) => handleClick(event, name)} />
-                        </TableCell>
+            
+              <TableContainer sx={{ minWidth: 800 }}>
+                <Table>
+                  <TableListHead
+                    order={order}
+                    orderBy={orderBy}
+                    headLabel={TABLE_HEAD}
+                    rowCount={VPNLIST.length}
+                    numSelected={selected.length}
+                    onRequestSort={handleRequestSort}
+                    onSelectAllClick={handleSelectAllClick}
+                  />
+                  <TableBody>
+                    {filteredVpn.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
+                      const { _id: id, country, countryCode, status, countryImage, regions, unicode } = row;
+                      const selectedUser = selected.indexOf(country) !== -1;
+                      
+                      return (
+                        <TableRow hover key={id} tabIndex={-1} role="checkbox" selected={selectedUser}>
+                          <TableCell padding="checkbox">
+                            <Checkbox checked={selectedUser} onChange={(event) => handleClick(event, country)} />
+                          </TableCell>
 
-                        <TableCell component="th" scope="row" padding="none">
-                          <Stack direction="row" alignItems="center" spacing={2}>
-                            <Avatar alt={name} src={avatarUrl} />
-                            <Typography variant="subtitle2" noWrap>
-                              {name}
+                          <TableCell component="th" scope="row" padding="none">
+                            <Stack direction="row" alignItems="center" spacing={2}>
+                              <Avatar alt={country} src={countryImage} />
+                              <Typography variant="subtitle2" noWrap>
+                                {country}
+                              </Typography>
+                            </Stack>
+                          </TableCell>
+
+                          <TableCell align="left">{countryCode}</TableCell>
+
+                          <TableCell align="left">{unicode}</TableCell>
+
+                          <TableCell align="left">{regions.length}</TableCell>
+
+                          <TableCell align="left">
+                            <Label color={(status === false && 'error') || 'success'}>{status?'Active':'Inactive'}</Label>
+                          </TableCell>
+
+                          <TableCell align="right">
+                            <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
+                              <Iconify icon={'eva:more-vertical-fill'} />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {emptyRows > 0 && (
+                      <TableRow style={{ height: 53 * emptyRows }}>
+                        <TableCell colSpan={6} />
+                      </TableRow>
+                    )}
+                  </TableBody>
+
+                  {isNotFound && (
+                    <TableBody>
+                      <TableRow>
+                        <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
+                          <Paper
+                            sx={{
+                              textAlign: 'center',
+                            }}
+                          >
+                            <Typography variant="h6" paragraph>
+                              Not found
                             </Typography>
-                          </Stack>
-                        </TableCell>
 
-                        <TableCell align="left">{company}</TableCell>
-
-                        <TableCell align="left">{role}</TableCell>
-
-                        <TableCell align="left">{isVerified ? 'Yes' : 'No'}</TableCell>
-
-                        <TableCell align="left">
-                          <Label color={(status === 'banned' && 'error') || 'success'}>{sentenceCase(status)}</Label>
-                        </TableCell>
-
-                        <TableCell align="right">
-                          <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
-                            <Iconify icon={'eva:more-vertical-fill'} />
-                          </IconButton>
+                            <Typography variant="body2">
+                              No results found for &nbsp;
+                              <strong>&quot;{filterCountry}&quot;</strong>.
+                              <br /> Try checking for typos or using complete words.
+                            </Typography>
+                          </Paper>
                         </TableCell>
                       </TableRow>
-                    );
-                  })}
-                  {emptyRows > 0 && (
-                    <TableRow style={{ height: 53 * emptyRows }}>
-                      <TableCell colSpan={6} />
-                    </TableRow>
+                    </TableBody>
                   )}
-                </TableBody>
+                </Table>
+              </TableContainer>
+            
 
-                {isNotFound && (
-                  <TableBody>
-                    <TableRow>
-                      <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
-                        <Paper
-                          sx={{
-                            textAlign: 'center',
-                          }}
-                        >
-                          <Typography variant="h6" paragraph>
-                            Not found
-                          </Typography>
-
-                          <Typography variant="body2">
-                            No results found for &nbsp;
-                            <strong>&quot;{filterName}&quot;</strong>.
-                            <br /> Try checking for typos or using complete words.
-                          </Typography>
-                        </Paper>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                )}
-              </Table>
-            </TableContainer>
-          </Scrollbar>
-
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={[].length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
-        </Card>
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25]}
+              component="div"
+              count={VPNLIST.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
+          </Card>
+        )}
       </Container>
 
       <Popover

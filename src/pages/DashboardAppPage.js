@@ -1,67 +1,97 @@
 import { Helmet } from 'react-helmet-async';
 import { faker } from '@faker-js/faker';
+import { getDashboardData } from '../repository/settings';
 // @mui
 // import { useTheme } from '@mui/material/styles';
-import { Grid, Container, Typography } from '@mui/material';
+import { Grid, Container, Typography, CircularProgress } from '@mui/material';
 // components
 // import Iconify from '../components/iconify';
 // sections
-import {
-  // AppTasks,
-  AppNewsUpdate,
-  AppOrderTimeline,
-  // AppCurrentVisits,
-  // AppWebsiteVisits,
-  // AppTrafficBySite,
-  AppWidgetSummary,
-  // AppCurrentSubject,
-  // AppConversionRates,
-} from '../sections/@dashboard/app';
-
+import { ListTile, AppOrderTimeline, AppWidgetSummary } from '../sections/@dashboard/app';
+import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 // ----------------------------------------------------------------------
 
 export default function DashboardAppPage() {
-  // const theme = useTheme();
+  // const [users, setUsers] = useState();
+  const [totalVpn, setTotalVpn] = useState(0);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [totalSubs, setSubs] = useState(0);
+  const [totalPlans, setTotalPlans] = useState(0);
+
+  const { isSuccess, isFetching } = useQuery({
+    queryKey: ['get-users'],
+    queryFn: getDashboardData,
+    onSuccess: (result) => {
+      console.log('data', result);
+
+      // setUsers(result.users);
+      setTotalPlans(result.totalPlans);
+      setSubs(result.subscriptions);
+      setTotalVpn(result.totalVpn);
+      setTotalUsers(result.totalUsers);
+    },
+  });
+
   return (
     <>
       <Helmet>
         <title> Dashboard | THURVPN </title>
       </Helmet>
 
-      <Container maxWidth="xl">
-        <Typography variant="h4" sx={{ mb: 5 }}>
-          Hi, Welcome back
-        </Typography>
+      {isFetching && (
+        <Container sx={{ display: 'flex', justifyContent: 'center', alignContent: 'center', mx: 'auto' }}>
+          {' '}
+          <CircularProgress color="success" sx={{ margin: 'auto' }} />{' '}
+        </Container>
+      )}
+      {isSuccess && (
+        <Container maxWidth="xl">
+          <Typography variant="h4" sx={{ mb: 5 }}>
+            Hi, Welcome back
+          </Typography>
 
-        <Grid container spacing={3}>
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary
-              title="Number of Users"
-              total={714000}
-              common="dark"
-              color="light"
-              icon={'basil:user-outline'}
-            />
-          </Grid>
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6} md={3}>
+              <AppWidgetSummary
+                title="Number of Users"
+                total={totalUsers}
+                common="dark"
+                color="light"
+                icon={'basil:user-outline'}
+              />
+            </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Total VPN" total={50} color="info" common="light" icon={'basil:user-outline'} />
-          </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <AppWidgetSummary
+                title="Total VPN Server"
+                total={totalVpn}
+                color="info"
+                common="light"
+                icon={'basil:user-outline'}
+              />
+            </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Subscribed" total={230003} color="warning" common="light" icon={'ph:crown-fill'} />
-          </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <AppWidgetSummary
+                title="Subscriptions"
+                total={totalSubs}
+                color="warning"
+                common="light"
+                icon={'ph:crown-fill'}
+              />
+            </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary
-              title="Free User"
-              total={234}
-              color="error"
-              common="light"
-              icon={'mdi:search-hands-free'}
-            />
-          </Grid>
-          {/* 
+            <Grid item xs={12} sm={6} md={3}>
+              <AppWidgetSummary
+                title="Total Plans"
+                total={totalPlans}
+                color="error"
+                common="light"
+                icon={'mdi:search-hands-free'}
+              />
+            </Grid>
+            {/* 
           <Grid item xs={12} md={6} lg={8}>
             <AppWebsiteVisits
               title="Website Visits"
@@ -152,38 +182,38 @@ export default function DashboardAppPage() {
             />
           </Grid> */}
 
-          <Grid item xs={12} md={6} lg={8}>
-            <AppNewsUpdate
-              title="Recently joined devices"
-              list={[...Array(5)].map((_, index) => ({
-                id: faker.datatype.uuid(),
-                title: `IOS ${13 + index}, Iphone 13`,
-                description: 'Red323x45345Fhghsdfs',
-                image: `/assets/images/covers/cover_${index + 1}.jpg`,
-                postedAt: faker.date.recent(),
-              }))}
-            />
-          </Grid>
+            <Grid item xs={12} md={6} lg={8}>
+              <ListTile
+                title="Recently joined devices"
+                list={[...Array(5)].map((_, index) => ({
+                  id: faker.datatype.uuid(),
+                  title: `IOS ${13 + index}, Iphone 13`,
+                  description: 'Red323x45345Fhghsdfs',
+                  image: `/assets/images/covers/cover_${index + 1}.jpg`,
+                  postedAt: faker.date.recent(),
+                }))}
+              />
+            </Grid>
 
-          <Grid item xs={12} md={6} lg={4}>
-            <AppOrderTimeline
-              title="Log"
-              list={[...Array(5)].map((_, index) => ({
-                id: faker.datatype.uuid(),
-                title: [
-                  'Created new user',
-                  'New plans created',
-                  'Subscription approved',
-                  'Admin logged in',
-                  'Server disabled',
-                ][index],
-                type: `order${index + 1}`,
-                time: faker.date.past(),
-              }))}
-            />
-          </Grid>
+            <Grid item xs={12} md={6} lg={4}>
+              <AppOrderTimeline
+                title="Log"
+                list={[...Array(5)].map((_, index) => ({
+                  id: faker.datatype.uuid(),
+                  title: [
+                    'Created new user',
+                    'New plans created',
+                    'Subscription approved',
+                    'Admin logged in',
+                    'Server disabled',
+                  ][index],
+                  type: `order${index + 1}`,
+                  time: faker.date.past(),
+                }))}
+              />
+            </Grid>
 
-          {/* <Grid item xs={12} md={6} lg={4}>
+            {/* <Grid item xs={12} md={6} lg={4}>
             <AppTrafficBySite
               title="Traffic by Site"
               list={[
@@ -224,8 +254,9 @@ export default function DashboardAppPage() {
             />
           </Grid>
          */}
-        </Grid>
-      </Container>
+          </Grid>
+        </Container>
+      )}
     </>
   );
 }

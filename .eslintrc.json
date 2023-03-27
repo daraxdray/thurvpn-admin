@@ -14,9 +14,7 @@
       "sourceType": "module"
     },
     "plugins": [
-      "react",
-      "react-hooks",
-      "jsx-a11y"
+        "react","react-hooks"
     ],
     "rules": {
       "react/react-in-jsx-scope": "off",

@@ -18,7 +18,5 @@ Iconify.propTypes = {
   width: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   icon: PropTypes.oneOfType([PropTypes.element, PropTypes.string]),
 };
-
-Iconify.displayName = 'Iconify';
-
+Iconify.displayName = "Iconify";
 export default Iconify;

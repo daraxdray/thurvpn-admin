@@ -1,7 +1,8 @@
 import { Helmet } from 'react-helmet-async';
-import { sentenceCase } from 'change-case';
 import { filter } from 'lodash';
 import { useState } from 'react';
+import { getPlanList } from '../repository/plans';
+import { useQuery } from '@tanstack/react-query';
 // @mui
 import {
   Container,
@@ -10,7 +11,6 @@ import {
   Card,
   Table,
   Paper,
-  Avatar,
   Button,
   Popover,
   MenuItem,
@@ -21,20 +21,24 @@ import {
   IconButton,
   TableContainer,
   TablePagination,
+  CircularProgress,
 } from '@mui/material';
 import Label from '../components/label';
 import Iconify from '../components/iconify';
-import Scrollbar from '../components/scrollbar';
+// import Scrollbar from '../components/scrollbar';
 // sections
-import { UserListHead, UserListToolbar } from '../sections/@dashboard/user';
+import { TableListHead, TableListToolbar } from '../components/table-component';
 // mock
 
 const TABLE_HEAD = [
-  { id: 'name', label: 'Name', alignRight: false },
-  { id: 'validity', label: 'Validity', alignRight: false },
-  { id: 'price', label: 'Price', alignRight: false },
-  { id: 'date', label: 'Date', alignRight: false },
+  { id: 'title', label: 'Title', alignRight: false },
+  { id: 'description', label: 'Description', alignRight: false },
+  { id: 'price', label: 'Price($)', alignRight: false },
+  { id: 'duration', label: 'Duration', alignRight: false },
+  { id: 'deviceCount', label: 'Devices', alignRight: false },
   { id: 'status', label: 'Status', alignRight: false },
+  { id: 'iapCode', label: 'IAP Code', alignRight: false },
+  { id: 'created_at', label: 'Date', alignRight: false },
   { id: '' },
 ];
 
@@ -69,6 +73,15 @@ function applySortFilter(array, comparator, query) {
 
 export default function ProductsPage() {
   const [open, setOpen] = useState(null);
+  const [PLANLIST, setPlanList] = useState([]);
+  const { isSuccess, isFetching } = useQuery({
+    queryKey: ['get-plans'],
+    queryFn: getPlanList,
+    onSuccess: (result) => {
+      console.log('data', result);
+      setPlanList(result.plans);
+    },
+  });
 
   const [page, setPage] = useState(0);
 
@@ -78,7 +91,7 @@ export default function ProductsPage() {
 
   const [orderBy, setOrderBy] = useState('name');
 
-  const [filterName, setFilterName] = useState('');
+  const [filterTitle, setFilterTitle] = useState('');
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
@@ -129,16 +142,16 @@ export default function ProductsPage() {
     setRowsPerPage(parseInt(event.target.value, 10));
   };
 
-  const handleFilterByName = (event) => {
+  const handleFilterByProp = (event) => {
     setPage(0);
-    setFilterName(event.target.value);
+    setFilterTitle(event.target.value);
   };
 
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - [].length) : 0;
 
-  const filteredUsers = applySortFilter([], getComparator(order, orderBy), filterName);
+  const filteredPlans = applySortFilter(PLANLIST, getComparator(order, orderBy), filterTitle);
 
-  const isNotFound = !filteredUsers.length && !!filterName;
+  const isNotFound = !filteredPlans.length && !!filterTitle;
 
   return (
     <>
@@ -153,54 +166,61 @@ export default function ProductsPage() {
           </Typography>
 
           <Button variant="contained" startIcon={<Iconify icon="eva:plus-fill" />}>
-            New Plan
+            New Plan {emptyRows}
           </Button>
         </Stack>
-        <Card>
-          <UserListToolbar numSelected={selected.length} filterName={filterName} onFilterName={handleFilterByName} />
-
-          <Scrollbar>
+        {isFetching && (
+          <Container sx={{ display: 'flex', justifyContent: 'center', alignContent: 'center', mx: 'auto' }}>
+            {' '}
+            <CircularProgress color="success" sx={{ margin: 'auto' }} />{' '}
+          </Container>
+        )}
+       {isSuccess && ( <Card>
+          <TableListToolbar numSelected={selected.length} filterProp={filterTitle} onFilterProp={handleFilterByProp} />
+          
             <TableContainer sx={{ minWidth: 800 }}>
               <Table>
-                <UserListHead
+                <TableListHead
                   order={order}
                   orderBy={orderBy}
                   headLabel={TABLE_HEAD}
-                  rowCount={[]}
+                  rowCount={PLANLIST.length}
                   numSelected={selected.length}
                   onRequestSort={handleRequestSort}
                   onSelectAllClick={handleSelectAllClick}
                 />
                 <TableBody>
-                  {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-                    const { id, name, role, status, company, avatarUrl, isVerified } = row;
-                    const selectedUser = selected.indexOf(name) !== -1;
+                  {filteredPlans.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
+                    const { _id:id, title, description, deviceCount, duration, iapCode, price,active } = row;
+                    const selectedUser = selected.indexOf(title) !== -1;
 
                     return (
                       <TableRow hover key={id} tabIndex={-1} role="checkbox" selected={selectedUser}>
                         <TableCell padding="checkbox">
-                          <Checkbox checked={selectedUser} onChange={(event) => handleClick(event, name)} />
+                          <Checkbox checked={selectedUser} onChange={(event) => handleClick(event, title)} />
                         </TableCell>
 
                         <TableCell component="th" scope="row" padding="none">
                           <Stack direction="row" alignItems="center" spacing={2}>
-                            <Avatar alt={name} src={avatarUrl} />
+                            {/* <Avatar alt={title} src={''} /> */}
                             <Typography variant="subtitle2" noWrap>
-                              {name}
+                              {title}
                             </Typography>
                           </Stack>
                         </TableCell>
 
-                        <TableCell align="left">{company}</TableCell>
+                        <TableCell align="left">{description.length > 30?description.substr(0,30): description}</TableCell>
 
-                        <TableCell align="left">{role}</TableCell>
+                        <TableCell align="left">{price}</TableCell>
 
-                        <TableCell align="left">{isVerified ? 'Yes' : 'No'}</TableCell>
+                        <TableCell align="left">{duration}</TableCell>
 
+                        <TableCell align="left">{deviceCount}</TableCell>
                         <TableCell align="left">
-                          <Label color={(status === 'banned' && 'error') || 'success'}>{sentenceCase(status)}</Label>
+                          <Label color={(active == false && 'error') || 'success'}>{active?'Active':'Inactive'}</Label>
                         </TableCell>
 
+                        <TableCell align="left">{iapCode}</TableCell>
                         <TableCell align="right">
                           <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
                             <Iconify icon={'eva:more-vertical-fill'} />
@@ -231,7 +251,7 @@ export default function ProductsPage() {
 
                           <Typography variant="body2">
                             No results found for &nbsp;
-                            <strong>&quot;{filterName}&quot;</strong>.
+                            <strong>&quot;{filterTitle}&quot;</strong>.
                             <br /> Try checking for typos or using complete words.
                           </Typography>
                         </Paper>
@@ -241,7 +261,7 @@ export default function ProductsPage() {
                 )}
               </Table>
             </TableContainer>
-          </Scrollbar>
+          
 
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
@@ -252,7 +272,7 @@ export default function ProductsPage() {
             onPageChange={handleChangePage}
             onRowsPerPageChange={handleChangeRowsPerPage}
           />
-        </Card>
+        </Card>)}
       </Container>
 
       <Popover
