@@ -19,5 +19,5 @@ Iconify.propTypes = {
   icon: PropTypes.oneOfType([PropTypes.element, PropTypes.string]),
 };
 
-ThurAlert.displayName = "ThurAlert";
-export default ThurAlert;
+Iconify.displayName = "Iconify";
+export default Iconify;
