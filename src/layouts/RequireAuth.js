@@ -1,6 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import ROUTEPATH from '../utils/routePath';
-import { Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 
 const RequireAuth = ({children}) => {
