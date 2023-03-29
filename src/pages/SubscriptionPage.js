@@ -1,5 +1,4 @@
 import { Helmet } from 'react-helmet-async';
-import { sentenceCase } from 'change-case';
 import { filter } from 'lodash';
 import { useState } from 'react';
 import { getUserSubscription } from '../repository/subscription';
@@ -82,7 +81,7 @@ export default function ProductsPage() {
     queryFn: getUserSubscription,
     onSuccess: (result) => {
       console.log('data', result);
-      setSubscription(result.users);
+      setSubscription(result.purchases);
     },
   });
 
@@ -100,7 +99,7 @@ export default function ProductsPage() {
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  const [subscription, setSubscription] = useState([]);
+  const [subscriptions, setSubscription] = useState([]);
 
   const handleOpenMenu = (event) => {
     setOpen(event.currentTarget);
@@ -156,9 +155,9 @@ export default function ProductsPage() {
 
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - [].length) : 0;
 
-  console.log('subscriptionIHHHBVUJV', subscription);
+  console.log('subscriptionIHHHBVUJV', subscriptions);
 
-  const filteredUsers = applySortFilter(subscription, getComparator(order, orderBy), filterName);
+  const filteredUsers = applySortFilter(subscriptions, getComparator(order, orderBy), filterName);
 
   const isNotFound = !filteredUsers.length && !!filterName;
 
@@ -197,14 +196,15 @@ export default function ProductsPage() {
                   order={order}
                   orderBy={orderBy}
                   headLabel={TABLE_HEAD}
-                  rowCount={subscription.length}
+                  rowCount={subscriptions.length}
                   numSelected={selected.length}
                   onRequestSort={handleRequestSort}
                   onSelectAllClick={handleSelectAllClick}
                 />
                 <TableBody>
                   {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-                    const { id, name, role, status, company, avatarUrl, isVerified } = row;
+                    const { _id:id, plan_id, user_id, active, } = row;
+                    const name = user_id?.email;
                     const selectedUser = selected.indexOf(name) !== -1;
 
                     return (
@@ -215,21 +215,21 @@ export default function ProductsPage() {
 
                         <TableCell component="th" scope="row" padding="none">
                           <Stack direction="row" alignItems="center" spacing={2}>
-                            <Avatar alt={name} src={avatarUrl} />
+                            <Avatar alt={name} src={''} />
                             <Typography variant="subtitle2" noWrap>
                               {name}
                             </Typography>
                           </Stack>
                         </TableCell>
 
-                        <TableCell align="left">{company}</TableCell>
+                        <TableCell align="left">{plan_id.title}</TableCell>
 
-                        <TableCell align="left">{role}</TableCell>
+                        <TableCell align="left">{plan_id.price}</TableCell>
 
-                        <TableCell align="left">{isVerified ? 'Yes' : 'No'}</TableCell>
+                        <TableCell align="left">{active ? 'Yes' : 'No'}</TableCell>
 
                         <TableCell align="left">
-                          <Label color={(status === 'banned' && 'error') || 'success'}>{sentenceCase(status)}</Label>
+                          <Label color={active === false?'error' : 'success'}>Status</Label>
                         </TableCell>
 
                         <TableCell align="right">
