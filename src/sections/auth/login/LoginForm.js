@@ -4,7 +4,7 @@ import {
   useLocation,
 } from 'react-router-dom';
 // @mui
-import { Stack, IconButton, InputAdornment, TextField, Button, Box } from '@mui/material';
+import { Stack, IconButton, InputAdornment, TextField, Button, Box, Snackbar, Alert } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import { adminLogin, getUserData } from '../../../repository/auth';
 // components
@@ -43,7 +43,7 @@ export default function LoginForm() {
       if (loggedIn.status) {
         dispatch(loginUserIn(loggedIn.data))
         navigate('/dashboard/app', { replace: true });
-
+        
       }
       setResponse(loggedIn);
     } catch (e) {
@@ -63,6 +63,7 @@ export default function LoginForm() {
  useQuery(['fetchUser'],getUserData,{
     onSuccess:(res)=>{
       dispatch(loginUserIn({user: res}));
+      
       setSessionMsg('Session is Active, Redirecting in 2sec')
       setTimeout(()=>{
         navigate('/dashboard/app', { replace: true });
@@ -70,17 +71,30 @@ export default function LoginForm() {
     },
     onError:(error)=>{
       console.debug(error);
+      
       setSessionMsg('Session expired, please login')
     }
   })
   
+  const handleClose = (event, reason) => {
+    console.log(reason)
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSessionMsg('');
+  };
 
 
   return (
     <>
       <Stack spacing={3} sx={{ my: 2 }}>
-        {sessionMsg && <ThurAlert severe={'info'} message={sessionMsg} />}
+        {/* {sessionMsg && <ThurAlert severe={'info'} message={sessionMsg} />} */}
         {response && <ThurAlert severe={response.status ? 'success' : 'error'} message={response.message} />}
+        { <Snackbar open={sessionMsg != ''} autoHideDuration={6000} onClose={handleClose}>
+        <Alert onClose={handleClose} severity="warning" sx={{ width: '100%' }}>
+        {sessionMsg}
+        </Alert>
+      </Snackbar>}
         <TextField name="email" label="Email address" onChange={emailChange} value={email} />
         <TextField
           name="password"
