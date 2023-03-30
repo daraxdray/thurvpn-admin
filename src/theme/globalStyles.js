@@ -48,6 +48,37 @@ export default function GlobalStyles() {
           margin: 0,
           padding: 0,
         },
+        form: {
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          margin: 3,
+          padding: 20,
+          ['sm']: {
+            flexDirection: 'row',
+            justifyContent: 'center',
+          },
+        },
+        textField: {
+          margin: 1,
+          ['sm']: {
+            
+            marginRight: 1,
+          },
+        },
+  
+        modal: {
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        paper: {
+          backgroundColor: '#ccc',
+          borderRadius: 10,
+          boxShadow: 5,
+          padding: '2,3,4',
+          outline: 'none',
+        },
       }}
     />
   );
