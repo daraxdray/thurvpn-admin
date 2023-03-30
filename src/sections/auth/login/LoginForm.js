@@ -12,6 +12,7 @@ import Iconify from '../../../components/iconify';
 import { useDispatch } from 'react-redux';
 import { loginUserIn } from '../../../store/slice/authSlice'
 import ThurAlert from '../../../components/alert/alert';
+import axios from 'axios';
 
 // ----------------------------------------------------------------------
 
@@ -38,10 +39,14 @@ export default function LoginForm() {
     setEnabled(false)
     try {
       const loggedIn = await adminLogin(email, password);
+
+      console.log("loggedIn", loggedIn)
       if (loggedIn.status) {
+        // Set the authorization header with the token
+        axios.defaults.headers.common['Authorization'] = `Bearer ${loggedIn.data.jwt}`;
+        // Dispatch the user data to Redux store
         dispatch(loginUserIn(loggedIn.data))
         navigate('/dashboard/app', { replace: true });
-
       }
       setResponse(loggedIn);
     } catch (e) {
@@ -49,9 +54,8 @@ export default function LoginForm() {
       console.log(from)
       setEnabled(true)
     }
-
   };
-
+  
   const setDemos = () => {
     setEmail('demo@thursvpn.com');
     setPassword('Aa@12345');
