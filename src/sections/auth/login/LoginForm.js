@@ -42,7 +42,7 @@ export default function LoginForm() {
       const loggedIn = await adminLogin(email, password);
       if (loggedIn.status) {
         dispatch(loginUserIn(loggedIn.data))
-        navigate('/dashboard/app', { replace: true });
+        navigate(from ?? '/dashboard/app', { replace: true });
         
       }
       setResponse(loggedIn);
