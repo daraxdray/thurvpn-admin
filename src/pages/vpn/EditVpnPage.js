@@ -10,17 +10,18 @@ import {
   Modal,
   TextField,
   Switch,
-  // Box,
+  CircularProgress,
   Grid,
 } from '@mui/material';
 import { useState } from 'react';
 import RegionComponent from '../../components/thurcomponents/RegionComponent';
 import TitleComponent from 'src/components/thurcomponents/TitleComponent';
-import { createVPN } from '../../repository/vpn';
+import { updateVPN } from '../../repository/vpn';
 import ThurAlert from '../../components/alert/alert';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { getVpnById } from '../../repository/vpn';
 import { useQuery } from '@tanstack/react-query';
+import Iconify from '../../components/iconify';
 
 // sections
 // mock
@@ -66,6 +67,7 @@ const initialFormData = {
   code: '',
   premium: false,
   unicode: '',
+  regions: [],
 };
 
 const initialRegionData = {
@@ -79,33 +81,35 @@ const initialRegionData = {
 };
 
 export default function EditVpnPage() {
-  const { id } = useParams()
+  const { id } = useParams();
+  const history = useNavigate();
   const [formData, setFormData] = useState(initialFormData);
   const [regionData, setRegionData] = useState(initialRegionData);
   const [open, setOpen] = useState(false);
   const [enabled, setEnabled] = useState(true);
   const [response, setResponse] = useState(null);
   const [regions, setRegions] = useState([]);
-
-  const { isSuccess } = useQuery(['getvpn'], ()=>getVpnById(id),{
-    onSuccess:(res)=>{
-      setFormData(res.data)
-      // setResponse(res)
+  const [updateRegion, setUpdateRegion] = useState(false);
+  const [rIndex, setRegionIndex] = useState(0);
+  const { isSuccess, isError, refetch, isFetching } = useQuery(['getvpn'], () => getVpnById(id), {
+    onSuccess: (res) => {
+      setFormData({ ...res, code: res.countryCode, image: res.countryImage, premium: res.isPremium });
+      setRegions(res.regions);
     },
-    onError: (err)=>{
-      setResponse(err)
-    }
-  })
+    onError: (err) => {
+      console.log(err);
+      setResponse(err);
+    },
+  });
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
     setEnabled(false);
-    setFormData({ ...formData, regions: regions ?? [] });
+    console.log(regions);
+    setFormData({ regions: regions, ...formData });
     console.log(formData);
-    createVPN(formData)
+    updateVPN(formData)
       .then((res) => {
-        setFormData(initialFormData);
-        setRegions([]);
         handleResponse(res);
       })
       .catch((e) => {
@@ -147,19 +151,42 @@ export default function EditVpnPage() {
     setOpen(false);
   };
 
-  const AddRegionToList = () => {
+  const AddRegionToList = (event) => {
+    event.preventDefault();
     const rg = [];
     rg.push(regionData);
     setRegions([...regions, ...rg]);
+    setFormData({ ...formData, regions });
     setOpen(false);
+    setRegionData(initialRegionData);
+  };
+
+  const updateRegionToList = (event) => {
+    event.preventDefault();
+    console.log(regions[rIndex]);
+    regions[rIndex] = regionData;
+    console.log(regions[rIndex]);
+
+    setRegions([...regions]);
+    setFormData({ ...formData, regions });
+    setOpen(false);
+    setRegionData(initialRegionData);
+    setUpdateRegion(false);
   };
 
   //removes region from list
   const removeIndex = (index) => {
-    console.log(regions.length);
     regions.splice(index, 1);
     console.log(index, regions.length);
     setRegions([...regions]);
+    setFormData({ ...formData, regions });
+  };
+
+  const editRegion = (index) => {
+    setUpdateRegion(true);
+    setRegionData(regions[index]);
+    setRegionIndex(index);
+    setOpen(true);
   };
 
   return (
@@ -173,97 +200,141 @@ export default function EditVpnPage() {
           <Typography variant="h4" sx={{ mb: 5 }}>
             Edit VPN {isSuccess}
           </Typography>
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon="ic:round-keyboard-backspace" />}
+            onClick={() => history(-1)}
+          >
+            Back
+          </Button>
         </Stack>
-        {response && <ThurAlert severe={response.status ? 'success' : 'error'} message={response.message} />}
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={5}>
-            <Card sx={{ padding: 0 }}>
-              <form className={classes.form} onSubmit={handleFormSubmit}>
-                <TitleComponent title="Enter Country Data" />
-                <Stack direction={'column'} spacing={3}>
-                  <Stack direction={'row'} spacing={2}>
-                    <TextField
-                      className={classes.textField}
-                      label="Country"
-                      name="country"
-                      value={formData.country}
-                      onChange={handleFormChange}
-                      required
-                      variant="standard"
-                    />
-                    <TextField
-                      className={classes.textField}
-                      label="Country Code"
-                      name="code"
-                      value={formData.code}
-                      onChange={handleFormChange}
-                      required
-                      variant="standard"
-                    />
-                  </Stack>
-                  <Stack direction={'row'} spacing={2}>
-                    <TextField
-                      className={classes.textField}
-                      label="Image URL"
-                      name="image"
-                      value={formData.image}
-                      onChange={handleFormChange}
-                      required
-                      variant="standard"
-                    />
-                    <TextField
-                      className={classes.textField}
-                      label="Unicode"
-                      name="unicode"
-                      value={formData.unicode}
-                      onChange={handleFormChange}
-                      required
-                      variant="standard"
-                    />
-                  </Stack>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        color="primary"
-                        name="premium"
-                        checked={formData.premium}
-                        onChange={handlePremiumToggle}
+
+        {response && (
+          <ThurAlert
+            severe={response.status ? 'success' : 'error'}
+            message={response.message}
+            onClose={() => setResponse(null)}
+          />
+        )}
+        {isError && (
+          <Stack direction="row" alignItems="center" justifyContent="center">
+            <Button sx={{ mt: 5 }} onClick={() => refetch()}>
+              Refresh
+            </Button>
+          </Stack>
+        )}
+        {isFetching && (
+          <Container sx={{ display: 'flex', justifyContent: 'center', alignContent: 'center', mx: 'auto' }}>
+            {' '}
+            <CircularProgress color="success" sx={{ margin: 'auto' }} />{' '}
+          </Container>
+        )}
+        {isSuccess && (
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={8} spacing={3}>
+              <Card sx={{ padding: 0 }}>
+                <form  onSubmit={handleFormSubmit} style={{px:2,py:4 }}>
+                  <TitleComponent title="Enter Country Data" />
+                  <Stack direction={'column'} spacing={3} sx={{padding:0}}>
+                    <Stack direction={'row'} spacing={6} sx={{padding:0}}>
+                      <TextField
+                        className={classes.textField}
+                        label="Country"
+                        name="country"
+                        value={formData.country}
+                        onChange={handleFormChange}
+                        required
+                        variant="standard"
+                        width={500}
+                        fullWidth
                       />
-                    }
-                    label="Premium"
-                  />
-                  <Stack direction={'row'} spacing={2}>
-                    <Button
-                      className={classes.button}
-                      variant="contained"
-                      color="primary"
-                      type="submit"
-                      disabled={!enabled}
-                    >
-                      Submit
-                    </Button>
-                    <Button
-                      className={classes.button}
-                      variant="contained"
-                      color="primary"
-                      onClick={handleAddRegionClick}
-                    >
-                      Add Region
-                    </Button>
+                      <TextField
+                        className={classes.textField}
+                        label="Country Code"
+                        name="code"
+                        value={formData.code}
+                        onChange={handleFormChange}
+                        required
+                        variant="standard"
+                        fullWidth
+                      />
+                    </Stack>
+                    <Stack direction={'row'} spacing={2}>
+                      <TextField
+                        className={classes.textField}
+                        label="Image URL"
+                        name="image"
+                        value={formData.image}
+                        onChange={handleFormChange}
+                        required
+                        variant="standard"
+                        fullWidth
+                      />
+                      <TextField
+                        className={classes.textField}
+                        label="Unicode"
+                        name="unicode"
+                        value={formData.unicode}
+                        onChange={handleFormChange}
+                        required
+                        variant="standard"
+                        fullWidth
+                      />
+                    </Stack>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          color="primary"
+                          name="premium"
+                          checked={formData.premium}
+                          onChange={handlePremiumToggle}
+                        />
+                      }
+                      label="Premium"
+                    />
+                    <Stack direction={'row'} spacing={2}>
+                      <Button
+                        className={classes.button}
+                        variant="contained"
+                        color="primary"
+                        type="submit"
+                        disabled={!enabled}
+                      >
+                        Update
+                      </Button>
+                      <Button
+                        className={classes.button}
+                        variant="contained"
+                        color="primary"
+                        onClick={handleAddRegionClick}
+                      >
+                        Add Region
+                      </Button>
+                    </Stack>
                   </Stack>
-                </Stack>
-              </form>
-            </Card>
+                </form>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={10}>
+              <Card sx={{ alignItem: 'center', justifyContent: 'center', px: 2, py: 2 }}>
+                <TitleComponent title="Regions" />
+                
+                {regions.map((region, index) => {
+                  return (
+                    <RegionComponent
+                      region={region}
+                      key={index}
+                      onDelete={() => removeIndex(index)}
+                      onEdit={() => {
+                        editRegion(index);
+                      }}
+                    />
+                  );
+                })}
+              </Card>
+            </Grid>
           </Grid>
-          <Grid item xs={12} md={6}>
-            <Card sx={{ alignItem: 'center', justifyContent: 'center', px: 5, py: 2 }}>
-              <TitleComponent title="Regions" />
-              {regions.map((region, index) => {
-                return <RegionComponent region={region} key={index} onDelete={() => removeIndex(index)} />;
-              })}
-            </Card>
-          </Grid>
-        </Grid>
+        )}
         <Modal
           className={classes.modal}
           open={open}
@@ -278,7 +349,7 @@ export default function EditVpnPage() {
               top: '50%',
               left: '50%',
               transform: 'translate(-50%, -50%)',
-              width: 700,
+              width: 400,
               // bgcolor: 'background.paper',
               // border: '2px solid #000',
               // boxShadow: 24,
@@ -298,83 +369,85 @@ export default function EditVpnPage() {
               mt={5}
               sx={{ backgroundColor: 'white' }}
             >
-              <Stack direction={'column'} spacing={3}>
-                <Stack direction={'row'} spacing={2}>
+              <form onSubmit={updateRegion ? updateRegionToList : AddRegionToList}>
+                <Stack direction={'column'} spacing={3}>
+                  <Stack direction={'row'} spacing={2}>
+                    <TextField
+                      className={classes.textField}
+                      label="Region Name"
+                      name="regionName"
+                      value={regionData.regionName}
+                      onChange={handleRegionFormChange}
+                      required
+                      variant={'standard'}
+                    />
+                    <TextField
+                      className={classes.textField}
+                      label="Region Slug"
+                      name="slug"
+                      value={regionData.slug}
+                      onChange={handleRegionFormChange}
+                      required
+                      variant={'standard'}
+                    />
+                  </Stack>
+                  <Stack direction={'row'} spacing={2}>
+                    <TextField
+                      className={classes.textField}
+                      label="Ip Address"
+                      name="ipAddress"
+                      value={regionData.ipAddress}
+                      onChange={handleRegionFormChange}
+                      required
+                      variant={'standard'}
+                    />
+                    <TextField
+                      className={classes.textField}
+                      label="Port"
+                      name="port"
+                      value={regionData.port}
+                      onChange={handleRegionFormChange}
+                      required
+                      variant={'standard'}
+                    />
+                  </Stack>
+                  <Stack direction={'row'} spacing={2}>
+                    <TextField
+                      className={classes.textField}
+                      label="user"
+                      name="user"
+                      value={regionData.user}
+                      onChange={handleRegionFormChange}
+                      required
+                      variant={'standard'}
+                    />
+                    <TextField
+                      className={classes.textField}
+                      label="pass"
+                      name="pass"
+                      value={regionData.pass}
+                      onChange={handleRegionFormChange}
+                      required
+                      variant={'standard'}
+                    />
+                  </Stack>
                   <TextField
                     className={classes.textField}
-                    label="Region Name"
-                    name="regionName"
-                    value={regionData.regionName}
+                    label="File Path"
+                    name="filePath"
+                    value={regionData.filePath}
                     onChange={handleRegionFormChange}
                     required
                     variant={'standard'}
                   />
-                  <TextField
-                    className={classes.textField}
-                    label="Region Slug"
-                    name="slug"
-                    value={regionData.slug}
-                    onChange={handleRegionFormChange}
-                    required
-                    variant={'standard'}
-                  />
-                </Stack>
-                <Stack direction={'row'} spacing={2}>
-                  <TextField
-                    className={classes.textField}
-                    label="Ip Address"
-                    name="ipAddress"
-                    value={regionData.ip}
-                    onChange={handleRegionFormChange}
-                    required
-                    variant={'standard'}
-                  />
-                  <TextField
-                    className={classes.textField}
-                    label="Port"
-                    name="port"
-                    value={regionData.port}
-                    onChange={handleRegionFormChange}
-                    required
-                    variant={'standard'}
-                  />
-                </Stack>
-                <Stack direction={'row'} spacing={2}>
-                  <TextField
-                    className={classes.textField}
-                    label="user"
-                    name="user"
-                    value={regionData.user}
-                    onChange={handleRegionFormChange}
-                    required
-                    variant={'standard'}
-                  />
-                  <TextField
-                    className={classes.textField}
-                    label="pass"
-                    name="pass"
-                    value={regionData.pass}
-                    onChange={handleRegionFormChange}
-                    required
-                    variant={'standard'}
-                  />
-                </Stack>
-                <TextField
-                  className={classes.textField}
-                  label="File Path"
-                  name="filePath"
-                  value={regionData.filePath}
-                  onChange={handleRegionFormChange}
-                  required
-                  variant={'standard'}
-                />
 
-                <Stack direction={'row'} spacing={2}>
-                  <Button className={classes.button} variant="contained" color="secondary" onClick={AddRegionToList}>
-                    Add
-                  </Button>
+                  <Stack direction={'row'} spacing={2}>
+                    <Button className={classes.button} variant="contained" type="submit" color="secondary">
+                      {updateRegion ? 'Update' : 'Add'}
+                    </Button>
+                  </Stack>
                 </Stack>
-              </Stack>
+              </form>
             </Stack>
           </Card>
         </Modal>

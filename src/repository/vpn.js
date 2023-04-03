@@ -56,6 +56,17 @@ export const createVPN = async(data)=>{
     return errorHandler(e)
   }
 }
+export const updateVPN = async(data)=>{
+  try{
+    const res = await connect().put('vpn/update-country',{
+      ...data
+    });
+    return handler(res);
+
+  }catch(e){
+    return errorHandler(e)
+  }
+}
 export const deleteVPN = async(id)=>{
   try{
     

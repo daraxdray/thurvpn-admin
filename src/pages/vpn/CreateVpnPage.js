@@ -306,7 +306,7 @@ export default function CreateVpnPage() {
                     className={classes.textField}
                     label="Ip Address"
                     name="ipAddress"
-                    value={regionData.ip}
+                    value={regionData.ipAddress}
                     onChange={handleRegionFormChange}
                     required
                     variant={'standard'}

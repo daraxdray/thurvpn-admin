@@ -2,8 +2,8 @@ import { Alert } from '@mui/material';
 import PropTypes from 'prop-types';
 import { forwardRef } from 'react';
 
-const ThurAlert = forwardRef(({ severe, message }, ref) => (
-  <Alert ref={ref} severity={severe} component="span">
+const ThurAlert = forwardRef(({ severe, message, onClose }, ref) => (
+  <Alert ref={ref} severity={severe} component="span" onClose={onClose}>
     {message}
   </Alert>
 ));
