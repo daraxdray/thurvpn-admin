@@ -8,7 +8,7 @@ import { StyledLabel } from './styles';
 
 // ----------------------------------------------------------------------
 
-const Label = forwardRef(({ children, color = 'default', variant = 'soft', startIcon, endIcon, sx, ...other }, ref) => {
+const Label = forwardRef(function Label({ children, color = 'default', variant = 'soft', startIcon, endIcon, sx, ...other }, ref) {
   const theme = useTheme();
 
   const iconStyle = {

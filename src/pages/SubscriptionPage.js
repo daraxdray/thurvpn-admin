@@ -1,7 +1,9 @@
 import { Helmet } from 'react-helmet-async';
-import { sentenceCase } from 'change-case';
 import { filter } from 'lodash';
 import { useState } from 'react';
+import { getUserSubscription } from '../repository/subscription';
+import { useQuery } from '@tanstack/react-query';
+
 // @mui
 import {
   Container,
@@ -21,6 +23,7 @@ import {
   IconButton,
   TableContainer,
   TablePagination,
+  CircularProgress
 } from '@mui/material';
 import Label from '../components/label';
 import Iconify from '../components/iconify';
@@ -55,6 +58,7 @@ function getComparator(order, orderBy) {
 }
 
 function applySortFilter(array, comparator, query) {
+  console.log('arraycv', array);
   const stabilizedThis = array.map((el, index) => [el, index]);
   stabilizedThis.sort((a, b) => {
     const order = comparator(a[0], b[0]);
@@ -67,7 +71,20 @@ function applySortFilter(array, comparator, query) {
   return stabilizedThis.map((el) => el[0]);
 }
 
+
+
+
 export default function ProductsPage() {
+
+  const { isSuccess, isFetching } = useQuery({
+    queryKey: ['get-subscribers'],
+    queryFn: getUserSubscription,
+    onSuccess: (result) => {
+      console.log('data', result);
+      setSubscription(result.purchases);
+    },
+  });
+
   const [open, setOpen] = useState(null);
 
   const [page, setPage] = useState(0);
@@ -81,6 +98,8 @@ export default function ProductsPage() {
   const [filterName, setFilterName] = useState('');
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const [subscriptions, setSubscription] = useState([]);
 
   const handleOpenMenu = (event) => {
     setOpen(event.currentTarget);
@@ -136,7 +155,9 @@ export default function ProductsPage() {
 
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - [].length) : 0;
 
-  const filteredUsers = applySortFilter([], getComparator(order, orderBy), filterName);
+  console.log('subscriptionIHHHBVUJV', subscriptions);
+
+  const filteredUsers = applySortFilter(subscriptions, getComparator(order, orderBy), filterName);
 
   const isNotFound = !filteredUsers.length && !!filterName;
 
@@ -156,6 +177,15 @@ export default function ProductsPage() {
             Create
           </Button>
         </Stack>
+
+        {isFetching && (
+          <Container sx={{ display: 'flex', justifyContent: 'center', alignContent: 'center', mx: 'auto' }}>
+            {' '}
+            <CircularProgress color="success" sx={{ margin: 'auto' }} />{' '}
+          </Container>
+        )}
+
+        {isSuccess && (
         <Card>
           <TableListToolbar numSelected={selected.length} filterName={filterName} onFilterName={handleFilterByName} />
 
@@ -166,14 +196,15 @@ export default function ProductsPage() {
                   order={order}
                   orderBy={orderBy}
                   headLabel={TABLE_HEAD}
-                  rowCount={[]}
+                  rowCount={subscriptions.length}
                   numSelected={selected.length}
                   onRequestSort={handleRequestSort}
                   onSelectAllClick={handleSelectAllClick}
                 />
                 <TableBody>
                   {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-                    const { id, name, role, status, company, avatarUrl, isVerified } = row;
+                    const { _id:id, plan_id, user_id, active, } = row;
+                    const name = user_id?.email;
                     const selectedUser = selected.indexOf(name) !== -1;
 
                     return (
@@ -184,21 +215,21 @@ export default function ProductsPage() {
 
                         <TableCell component="th" scope="row" padding="none">
                           <Stack direction="row" alignItems="center" spacing={2}>
-                            <Avatar alt={name} src={avatarUrl} />
+                            <Avatar alt={name} src={''} />
                             <Typography variant="subtitle2" noWrap>
                               {name}
                             </Typography>
                           </Stack>
                         </TableCell>
 
-                        <TableCell align="left">{company}</TableCell>
+                        <TableCell align="left">{plan_id.title}</TableCell>
 
-                        <TableCell align="left">{role}</TableCell>
+                        <TableCell align="left">{plan_id.price}</TableCell>
 
-                        <TableCell align="left">{isVerified ? 'Yes' : 'No'}</TableCell>
+                        <TableCell align="left">{active ? 'Yes' : 'No'}</TableCell>
 
                         <TableCell align="left">
-                          <Label color={(status === 'banned' && 'error') || 'success'}>{sentenceCase(status)}</Label>
+                          <Label color={active === false?'error' : 'success'}>Status</Label>
                         </TableCell>
 
                         <TableCell align="right">
@@ -253,6 +284,7 @@ export default function ProductsPage() {
             onRowsPerPageChange={handleChangeRowsPerPage}
           />
         </Card>
+        )}
       </Container>
 
       <Popover
