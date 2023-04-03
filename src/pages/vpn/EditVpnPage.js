@@ -18,6 +18,9 @@ import RegionComponent from '../../components/thurcomponents/RegionComponent';
 import TitleComponent from 'src/components/thurcomponents/TitleComponent';
 import { createVPN } from '../../repository/vpn';
 import ThurAlert from '../../components/alert/alert';
+import { useParams } from 'react-router-dom';
+import { getVpnById } from '../../repository/vpn';
+import { useQuery } from '@tanstack/react-query';
 
 // sections
 // mock
@@ -75,7 +78,8 @@ const initialRegionData = {
   filePath: '',
 };
 
-export default function CreateVpnPage() {
+export default function EditVpnPage() {
+  const { id } = useParams()
   const [formData, setFormData] = useState(initialFormData);
   const [regionData, setRegionData] = useState(initialRegionData);
   const [open, setOpen] = useState(false);
@@ -83,27 +87,37 @@ export default function CreateVpnPage() {
   const [response, setResponse] = useState(null);
   const [regions, setRegions] = useState([]);
 
+  const { isSuccess } = useQuery(['getvpn'], ()=>getVpnById(id),{
+    onSuccess:(res)=>{
+      setFormData(res.data)
+      // setResponse(res)
+    },
+    onError: (err)=>{
+      setResponse(err)
+    }
+  })
+
   const handleFormSubmit = async (event) => {
     event.preventDefault();
-    setEnabled(false)
-    setFormData({...formData,regions: regions ?? []})
-    console.log(formData)
-    createVPN(formData).then((res)=>{
-      setFormData(initialFormData)
-      setRegions([])
-      handleResponse(res)
-    }).catch((e)=>{
-      console.log("error",e);
-      handleResponse(e)
-    })
-
+    setEnabled(false);
+    setFormData({ ...formData, regions: regions ?? [] });
+    console.log(formData);
+    createVPN(formData)
+      .then((res) => {
+        setFormData(initialFormData);
+        setRegions([]);
+        handleResponse(res);
+      })
+      .catch((e) => {
+        console.log('error', e);
+        handleResponse(e);
+      });
   };
 
-  const handleResponse = (res)=>{
+  const handleResponse = (res) => {
     setResponse(res);
-    setEnabled(true)
-
-  }
+    setEnabled(true);
+  };
 
   const handleFormChange = (event) => {
     setFormData({
@@ -151,18 +165,16 @@ export default function CreateVpnPage() {
   return (
     <>
       <Helmet>
-        <title> Dashboard: Create VPNs </title>
+        <title> Dashboard: Edit VPN </title>
       </Helmet>
 
       <Container maxWidth="xl">
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Typography variant="h4" sx={{ mb: 5 }}>
-            Create VPN
+            Edit VPN {isSuccess}
           </Typography>
         </Stack>
-
-       
-                {response && <ThurAlert severe={response.status ? 'success' : 'error'} message={response.message} />}
+        {response && <ThurAlert severe={response.status ? 'success' : 'error'} message={response.message} />}
         <Grid container spacing={2}>
           <Grid item xs={12} sm={5}>
             <Card sx={{ padding: 0 }}>
@@ -221,7 +233,13 @@ export default function CreateVpnPage() {
                     label="Premium"
                   />
                   <Stack direction={'row'} spacing={2}>
-                    <Button className={classes.button} variant="contained" color="primary" type="submit" disabled={!enabled}>
+                    <Button
+                      className={classes.button}
+                      variant="contained"
+                      color="primary"
+                      type="submit"
+                      disabled={!enabled}
+                    >
                       Submit
                     </Button>
                     <Button

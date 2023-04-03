@@ -3,23 +3,22 @@ import axios from 'axios';
 export const baseUrl =  `http://localhost:2023/api/` ;
 // 'https://api.thurvpn.com/api/';
 
-export const connect = (token = '') =>
+export const connect = () =>
   axios.create({
     baseURL: baseUrl,
     headers: {
       'Content-type': 'application/json',
-      'Authorization': `Bearer ${token}`
     },
   });
 
 export const handler = (response) => {
   var result = response;
-  console.info('API RESULT', JSON.stringify(result.data));
-  console.info('API STATUS', JSON.stringify(result.status));
+  console.info('API RESULT', result.data);
+  console.info('API STATUS', result.status);
   if (result.status >= 200 || result.status < 299) {
     return {
       status: result.data.status,
-      msg: result.data.message,
+      message: result.data.message,
       data: result.data.data,
     };
   }

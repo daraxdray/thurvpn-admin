@@ -11,7 +11,7 @@ import PlansPage from './pages/PlansPage';
 import SubscriptionPage from './pages/SubscriptionPage';
 import DashboardAppPage from './pages/DashboardAppPage';
 import RequireAuth from './layouts/RequireAuth';
-import { CreateVpnPage, VpnPage, VPNListPage } from './pages/vpn/index.js';
+import { CreateVpnPage, EditVpnPage, VpnPage, VPNListPage } from './pages/vpn/index.js';
 // import { useDispatch } from 'react-redux';
 // import { logout } from './store/slice/authSlice';
 // ----------------------------------------------------------------------
@@ -42,6 +42,7 @@ export default function Router() {
             { element: <Navigate to="/dashboard/vpn/list" />, index: true },
             { path: 'list', element: <VPNListPage /> },
             { path: 'create', element: <CreateVpnPage /> },
+            { path: 'edit/:id', element: <EditVpnPage /> },
           ]
         },
 

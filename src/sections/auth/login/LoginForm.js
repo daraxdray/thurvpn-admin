@@ -42,6 +42,7 @@ export default function LoginForm() {
       const loggedIn = await adminLogin(email, password);
       if (loggedIn.status) {
         dispatch(loginUserIn(loggedIn.data))
+        
         navigate(from ?? '/dashboard/app', { replace: true });
         
       }
@@ -66,7 +67,7 @@ export default function LoginForm() {
       
       setSessionMsg('Session is Active, Redirecting in 2sec')
       setTimeout(()=>{
-        navigate('/dashboard/app', { replace: true });
+        navigate(from ?? '/dashboard/app', { replace: true });
       },2000)
     },
     onError:(error)=>{

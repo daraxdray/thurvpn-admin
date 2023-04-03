@@ -147,6 +147,7 @@ export default function PlansPage() {
     setFilterTitle(event.target.value);
   };
 
+ 
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - [].length) : 0;
 
   const filteredPlans = applySortFilter(PLANLIST, getComparator(order, orderBy), filterTitle);
@@ -160,13 +161,13 @@ export default function PlansPage() {
       </Helmet>
 
       <Container maxWidth="xl">
-        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
-          <Typography variant="h4" sx={{ mb: 5 }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
+          <Typography variant="h4" >
             Plans
           </Typography>
 
           <Button variant="contained" startIcon={<Iconify icon="eva:plus-fill" />}>
-            New Plan {emptyRows}
+            New Plan
           </Button>
         </Stack>
         {isFetching && (

@@ -1,7 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 import { filter } from 'lodash';
 import { useState } from 'react';
-import { getVpnList } from '../../repository/vpn';
+import { getVpnList, deleteVPN } from '../../repository/vpn';
 
 // @mui
 import {
@@ -27,10 +27,13 @@ import {
 import Label from '../../components/label';
 import Iconify from '../../components/iconify';
 // import Scrollbar from '../components/scrollbar';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 // sections
 import { TableListHead, TableListToolbar } from '../../components/table-component';
 import { Link as RouterLink } from 'react-router-dom';
+import AlertDialog from '../../components/alert/dialogue';
+import ThurAlert from '../../components/alert/alert';
+
 // mock
 
 const TABLE_HEAD = [
@@ -72,32 +75,31 @@ function applySortFilter(array, comparator, query) {
 }
 
 export default function VPNListPage() {
-  const { isSuccess, isFetching } = useQuery({
-    queryKey: ['get-vpn'],
-    queryFn: getVpnList,
-    onSuccess: (result) => {
-      console.log(result);
-      setVPNLIST(result);
-    },
-  });
-
   const [VPNLIST, setVPNLIST] = useState([]);
   const [open, setOpen] = useState(null);
-
+  const [openDelete, setOpenDelete] = useState(false);
   const [page, setPage] = useState(0);
-
+  const [focusVpn, setFocus] = useState(null);
+  const [response, setResponse] = useState(null);
   const [order, setOrder] = useState('asc');
-
   const [selected, setSelected] = useState([]);
-
   const [orderBy, setOrderBy] = useState('_id');
-
   const [filterCountry, setFilterCountry] = useState('');
-
   const [rowsPerPage, setRowsPerPage] = useState(5);
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - VPNLIST.length) : 0;
 
-  const handleOpenMenu = (event) => {
+  const filteredVpn = applySortFilter(VPNLIST, getComparator(order, orderBy), filterCountry);
+
+  const isNotFound = !filteredVpn.length && !!filterCountry;
+
+  const handleOpenMenu = (event, vpnFocus) => {
     setOpen(event.currentTarget);
+    setFocus(vpnFocus);
+  };
+
+  const openDialogue = () => {
+    setOpenDelete(true);
+    setOpen(false);
   };
 
   const handleCloseMenu = () => {
@@ -148,12 +150,32 @@ export default function VPNListPage() {
     setFilterCountry(event.target.value);
   };
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - VPNLIST.length) : 0;
+  const { isSuccess, isFetching, refetch } = useQuery({
+    queryKey: ['get-vpn'],
+    queryFn: getVpnList,
+    onSuccess: (result) => {
+      console.log(result);
+      setVPNLIST(result);
+    },
+  });
 
-  const filteredVpn = applySortFilter(VPNLIST, getComparator(order, orderBy), filterCountry);
+  const deleteVpnMt = useMutation(['delete'], () => deleteVPN(focusVpn?._id), {
+    onSuccess: (res) => {
+      console.log(res);
+      setResponse(res);
+      setOpenDelete(false);
+      refetch().then(() => setResponse(null));
+    },
+    onError: (error) => {
+      setResponse(error);
+      setOpenDelete(false);
+    },
+  });
 
-  const isNotFound = !filteredVpn.length && !!filterCountry;
-
+  const getDate = (data)=>{
+    const date = new Date(data);
+    return date.toDateString();
+  }
   return (
     <>
       <Helmet>
@@ -161,17 +183,28 @@ export default function VPNListPage() {
       </Helmet>
 
       <Container maxWidth="xl">
-        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
-          <Typography variant="h4" sx={{ mb: 5 }}>
-            VPN
-          </Typography>
-
-          <Button variant="contained" startIcon={<Iconify icon="eva:plus-fill" />} to={'/dashboard/vpn/create'} component={RouterLink}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
+          <Typography variant="h4">VPN</Typography>
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon="eva:plus-fill" />}
+            to={'/dashboard/vpn/create'}
+            component={RouterLink}
+          >
             Create
           </Button>
         </Stack>
+        <AlertDialog
+          open={openDelete}
+          yesText={'Delete'}
+          noText={'Cancel'}
+          title="Do you want to delete?"
+          message={`Confirm to delete the country ${focusVpn?.country}`}
+          handleYes={() => deleteVpnMt.mutate()}
+          handleNo={() => setOpenDelete(false)}
+        />
+        {response && <ThurAlert severe={response.status ? 'success' : 'error'} message={response.message} />}
 
-        
         {isFetching && (
           <Container sx={{ display: 'flex', justifyContent: 'center', alignContent: 'center', mx: 'auto' }}>
             {' '}
@@ -186,89 +219,91 @@ export default function VPNListPage() {
               onFilterProp={handleFilterByCountry}
             />
 
-            
-              <TableContainer sx={{ minWidth: 800 }}>
-                <Table>
-                  <TableListHead
-                    order={order}
-                    orderBy={orderBy}
-                    headLabel={TABLE_HEAD}
-                    rowCount={VPNLIST.length}
-                    numSelected={selected.length}
-                    onRequestSort={handleRequestSort}
-                    onSelectAllClick={handleSelectAllClick}
-                  />
-                  <TableBody>
-                    {filteredVpn.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-                      const { _id: id, country, countryCode, status, countryImage, regions, unicode } = row;
-                      const selectedUser = selected.indexOf(country) !== -1;
-                      
-                      return (
-                        <TableRow hover key={id} tabIndex={-1} role="checkbox" selected={selectedUser}>
-                          <TableCell padding="checkbox">
-                            <Checkbox checked={selectedUser} onChange={(event) => handleClick(event, country)} />
-                          </TableCell>
+            <TableContainer sx={{ minWidth: 800 }}>
+              <Table>
+                <TableListHead
+                  order={order}
+                  orderBy={orderBy}
+                  headLabel={TABLE_HEAD}
+                  rowCount={VPNLIST.length}
+                  numSelected={selected.length}
+                  onRequestSort={handleRequestSort}
+                  onSelectAllClick={handleSelectAllClick}
+                />
+                <TableBody>
+                  {filteredVpn.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
+                    const { _id: id, country, countryCode, status, countryImage, regions, unicode, created_at } = row;
+                    const selectedUser = selected.indexOf(country) !== -1;
 
-                          <TableCell component="th" scope="row" padding="none">
-                            <Stack direction="row" alignItems="center" spacing={2}>
-                              <Avatar alt={country} src={countryImage} />
-                              <Typography variant="subtitle2" noWrap>
-                                {country}
-                              </Typography>
-                            </Stack>
-                          </TableCell>
+                    return (
+                      <TableRow hover key={id} tabIndex={-1} role="checkbox" selected={selectedUser}>
+                        <TableCell padding="checkbox">
+                          <Checkbox checked={selectedUser} onChange={(event) => handleClick(event, country)} />
+                        </TableCell>
 
-                          <TableCell align="left">{countryCode}</TableCell>
-
-                          <TableCell align="left">{unicode}</TableCell>
-
-                          <TableCell align="left">{regions.length}</TableCell>
-
-                          <TableCell align="left">
-                            <Label color={(status === false && 'error') || 'success'}>{status?'Active':'Inactive'}</Label>
-                          </TableCell>
-
-                          <TableCell align="right">
-                            <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
-                              <Iconify icon={'eva:more-vertical-fill'} />
-                            </IconButton>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                    {emptyRows > 0 && (
-                      <TableRow style={{ height: 53 * emptyRows }}>
-                        <TableCell colSpan={6} />
-                      </TableRow>
-                    )}
-                  </TableBody>
-
-                  {isNotFound && (
-                    <TableBody>
-                      <TableRow>
-                        <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
-                          <Paper
-                            sx={{
-                              textAlign: 'center',
-                            }}
-                          >
-                            <Typography variant="h6" paragraph>
-                              Not found
+                        <TableCell component="th" scope="row" padding="none">
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Avatar alt={country} src={countryImage} />
+                            <Typography variant="subtitle2" noWrap>
+                              {country}
                             </Typography>
+                          </Stack>
+                        </TableCell>
 
-                            <Typography variant="body2">
-                              No results found for &nbsp;
-                              <strong>&quot;{filterCountry}&quot;</strong>.
-                              <br /> Try checking for typos or using complete words.
-                            </Typography>
-                          </Paper>
+                        <TableCell align="left">{countryCode}</TableCell>
+
+                        <TableCell align="left">{unicode}</TableCell>
+
+                        <TableCell align="left">{regions.length}</TableCell>
+
+                        <TableCell align="left">{getDate(created_at)}</TableCell>
+
+                        <TableCell align="left">
+                          <Label color={(status === false && 'error') || 'success'}>
+                            {status ? 'Active' : 'Inactive'}
+                          </Label>
+                        </TableCell>
+
+                        <TableCell align="right">
+                          <IconButton size="large" color="inherit" onClick={(event) => handleOpenMenu(event, row)}>
+                            <Iconify icon={'eva:more-vertical-fill'} />
+                          </IconButton>
                         </TableCell>
                       </TableRow>
-                    </TableBody>
+                    );
+                  })}
+                  {emptyRows > 0 && (
+                    <TableRow style={{ height: 53 * emptyRows }}>
+                      <TableCell colSpan={6} />
+                    </TableRow>
                   )}
-                </Table>
-              </TableContainer>
-            
+                </TableBody>
+
+                {isNotFound && (
+                  <TableBody>
+                    <TableRow>
+                      <TableCell align="center" colSpan={6} sx={{ py: 3 }}>
+                        <Paper
+                          sx={{
+                            textAlign: 'center',
+                          }}
+                        >
+                          <Typography variant="h6" paragraph>
+                            Not found
+                          </Typography>
+
+                          <Typography variant="body2">
+                            No results found for &nbsp;
+                            <strong>&quot;{filterCountry}&quot;</strong>.
+                            <br /> Try checking for typos or using complete words.
+                          </Typography>
+                        </Paper>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                )}
+              </Table>
+            </TableContainer>
 
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}
@@ -287,7 +322,7 @@ export default function VPNListPage() {
         open={Boolean(open)}
         anchorEl={open}
         onClose={handleCloseMenu}
-        anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+        anchorOrigin={{ vertical: 'center', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         PaperProps={{
           sx: {
@@ -301,12 +336,14 @@ export default function VPNListPage() {
           },
         }}
       >
-        <MenuItem>
+        <MenuItem to={`/dashboard/vpn/edit/${focusVpn?._id}`}
+            component={RouterLink}>
           <Iconify icon={'eva:edit-fill'} sx={{ mr: 2 }} />
           Edit
-        </MenuItem>
+        
+        </MenuItem >
 
-        <MenuItem sx={{ color: 'error.main' }}>
+        <MenuItem sx={{ color: 'error.main' }} onClick={() => openDialogue()}>
           <Iconify icon={'eva:trash-2-outline'} sx={{ mr: 2 }} />
           Delete
         </MenuItem>
