@@ -44,7 +44,7 @@ export default function LoginForm() {
       console.log("loggedIn", loggedIn)
       if (loggedIn.status) {
         // Set the authorization header with the token
-        axios.defaults.headers.common['Authorization'] = `Bearer ${loggedIn.data.jwt}`;
+        // axios.defaults.headers.common['Authorization'] = `Bearer ${loggedIn.data.jwt}`;
         // Dispatch the user data to Redux store
         dispatch(loginUserIn(loggedIn.data))
         

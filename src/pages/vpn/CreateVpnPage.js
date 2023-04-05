@@ -3,7 +3,6 @@ import { Helmet } from 'react-helmet-async';
 import {
   Container,
   Stack,
-  Typography,
   Card,
   FormControlLabel,
   Button,
@@ -14,8 +13,7 @@ import {
   Grid,
 } from '@mui/material';
 import { useState } from 'react';
-import RegionComponent from '../../components/thurcomponents/RegionComponent';
-import TitleComponent from 'src/components/thurcomponents/TitleComponent';
+import {SectionTitle, TitleComponent, RegionComponent } from 'src/components/thurcomponents/index';
 import { createVPN } from '../../repository/vpn';
 import ThurAlert from '../../components/alert/alert';
 
@@ -63,6 +61,7 @@ const initialFormData = {
   code: '',
   premium: false,
   unicode: '',
+  regions:[]
 };
 
 const initialRegionData = {
@@ -86,7 +85,7 @@ export default function CreateVpnPage() {
   const handleFormSubmit = async (event) => {
     event.preventDefault();
     setEnabled(false)
-    setFormData({...formData,regions: regions ?? []})
+    setFormData({...formData,regions: regions})
     console.log(formData)
     createVPN(formData).then((res)=>{
       setFormData(initialFormData)
@@ -138,6 +137,7 @@ export default function CreateVpnPage() {
     rg.push(regionData);
     setRegions([...regions, ...rg]);
     setOpen(false);
+    setRegionData(initialRegionData)
   };
 
   //removes region from list
@@ -155,11 +155,7 @@ export default function CreateVpnPage() {
       </Helmet>
 
       <Container maxWidth="xl">
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Typography variant="h4" sx={{ mb: 5 }}>
-            Create VPN
-          </Typography>
-        </Stack>
+      <SectionTitle title={'Create VPN'} text={'Go Back'} />
 
        
                 {response && <ThurAlert severe={response.status ? 'success' : 'error'} message={response.message} />}

@@ -3,7 +3,6 @@ import { Helmet } from 'react-helmet-async';
 import {
   Container,
   Stack,
-  Typography,
   Card,
   FormControlLabel,
   Button,
@@ -13,15 +12,14 @@ import {
   CircularProgress,
   Grid,
 } from '@mui/material';
-import { useState } from 'react';
-import RegionComponent from '../../components/thurcomponents/RegionComponent';
-import TitleComponent from 'src/components/thurcomponents/TitleComponent';
+import { useState, useReducer } from 'react';
+import {SectionTitle, TitleComponent, RegionComponent } from 'src/components/thurcomponents/index';
 import { updateVPN } from '../../repository/vpn';
 import ThurAlert from '../../components/alert/alert';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { getVpnById } from '../../repository/vpn';
 import { useQuery } from '@tanstack/react-query';
-import Iconify from '../../components/iconify';
+
 
 // sections
 // mock
@@ -68,6 +66,7 @@ const initialFormData = {
   premium: false,
   unicode: '',
   regions: [],
+  status: true
 };
 
 const initialRegionData = {
@@ -80,9 +79,46 @@ const initialRegionData = {
   filePath: '',
 };
 
+const initState = {
+  country: '',
+  image: '',
+  code: '',
+  premium: false,
+  unicode: '',
+  regions: [],
+  status: true,
+  activeRegion : initialRegionData
+}
+const reducer = (state,action)=>{
+
+  switch(action.type){
+    case 'SET_FORM_DATA':
+      return {
+        ...state,
+         ...action.payload
+      }
+     case 'ADD_REGION':
+       return {
+         ...state,
+         regions: [...state.regions,action.payload]
+       }
+      case 'REMOVE_REGION':
+        // const regs = state.regions.splice(action.payload, 1);
+        return {
+          ...state,
+          regions: state.regions.splice(action.payload, 1)
+        } 
+      default: 
+      return   
+  }
+
+
+}
+
 export default function EditVpnPage() {
+
+  const [state ,dispatch] = useReducer(reducer,initState)
   const { id } = useParams();
-  const history = useNavigate();
   const [formData, setFormData] = useState(initialFormData);
   const [regionData, setRegionData] = useState(initialRegionData);
   const [open, setOpen] = useState(false);
@@ -105,9 +141,8 @@ export default function EditVpnPage() {
   const handleFormSubmit = async (event) => {
     event.preventDefault();
     setEnabled(false);
-    console.log(regions);
+    console.log(state);
     setFormData({ regions: regions, ...formData });
-    console.log(formData);
     updateVPN(formData)
       .then((res) => {
         handleResponse(res);
@@ -124,10 +159,12 @@ export default function EditVpnPage() {
   };
 
   const handleFormChange = (event) => {
-    setFormData({
-      ...formData,
-      [event.target.name]: event.target.value,
-    });
+    // setFormData({
+    //   ...formData,
+    //   [event.target.name]: event.target.value,
+    // });
+    dispatch({type:'SET_FORM_DATA', payload: {[event.target.name]:event.target.value}})
+    console.log(state.country);
   };
   const handleRegionFormChange = (event) => {
     setRegionData({
@@ -136,12 +173,15 @@ export default function EditVpnPage() {
     });
   };
 
-  const handlePremiumToggle = (event) => {
-    setFormData({
-      ...formData,
-      premium: event.target.checked,
-    });
+  const handleToggle = (event) => {
+
+    // setFormData({
+    //   ...formData,
+    //   premium: event.target.checked,
+    // });
+    dispatch({type:'SET_FORM_DATA',payload:{ [event.target.name]: event.target.checked},})
   };
+  
 
   const handleAddRegionClick = () => {
     setOpen(true);
@@ -153,12 +193,15 @@ export default function EditVpnPage() {
 
   const AddRegionToList = (event) => {
     event.preventDefault();
-    const rg = [];
-    rg.push(regionData);
-    setRegions([...regions, ...rg]);
-    setFormData({ ...formData, regions });
+    // rg.push(regionData);
+    // setRegions([...regions, ...rg]);
+    // formData.regions = regions;
+    // console.log(formData)
+    // setFormData( {...formData, unicode:'909090'});
+    // console.log(formData)
+    // setRegionData(initialRegionData);
+    dispatch({type:'ADD_REGION', payload: regionData})
     setOpen(false);
-    setRegionData(initialRegionData);
   };
 
   const updateRegionToList = (event) => {
@@ -196,18 +239,7 @@ export default function EditVpnPage() {
       </Helmet>
 
       <Container maxWidth="xl">
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Typography variant="h4" sx={{ mb: 5 }}>
-            Edit VPN {isSuccess}
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<Iconify icon="ic:round-keyboard-backspace" />}
-            onClick={() => history(-1)}
-          >
-            Back
-          </Button>
-        </Stack>
+      <SectionTitle title={'Edit VPN'} text={'Go Back'} />
 
         {response && (
           <ThurAlert
@@ -233,15 +265,15 @@ export default function EditVpnPage() {
           <Grid container spacing={2}>
             <Grid item xs={12} sm={8} spacing={3}>
               <Card sx={{ padding: 0 }}>
-                <form  onSubmit={handleFormSubmit} style={{px:2,py:4 }}>
+                <form  onSubmit={handleFormSubmit} style={{px:0,py:2 }}>
                   <TitleComponent title="Enter Country Data" />
-                  <Stack direction={'column'} spacing={3} sx={{padding:0}}>
-                    <Stack direction={'row'} spacing={6} sx={{padding:0}}>
+                  
+                    <Stack direction={'row'} spacing={6} sx={{padding:0, width:'100%', mb: 4}}>
                       <TextField
                         className={classes.textField}
                         label="Country"
                         name="country"
-                        value={formData.country}
+                        value={state.country}
                         onChange={handleFormChange}
                         required
                         variant="standard"
@@ -252,19 +284,19 @@ export default function EditVpnPage() {
                         className={classes.textField}
                         label="Country Code"
                         name="code"
-                        value={formData.code}
+                        value={state.code}
                         onChange={handleFormChange}
                         required
                         variant="standard"
                         fullWidth
                       />
                     </Stack>
-                    <Stack direction={'row'} spacing={2}>
+                    <Stack direction={'row'} spacing={6} sx={{padding:0, width:'100%', mb: 3 }}>
                       <TextField
                         className={classes.textField}
                         label="Image URL"
                         name="image"
-                        value={formData.image}
+                        value={state.image}
                         onChange={handleFormChange}
                         required
                         variant="standard"
@@ -274,25 +306,40 @@ export default function EditVpnPage() {
                         className={classes.textField}
                         label="Unicode"
                         name="unicode"
-                        value={formData.unicode}
+                        value={state.unicode}
                         onChange={handleFormChange}
                         required
                         variant="standard"
                         fullWidth
                       />
                     </Stack>
+                    <Stack direction={'row'} spacing={6} sx={{padding:0, width:'100%', mb: 3 }}>
                     <FormControlLabel
+
                       control={
                         <Switch
                           color="primary"
                           name="premium"
-                          checked={formData.premium}
-                          onChange={handlePremiumToggle}
+                          checked={state.premium}
+                          onChange={handleToggle}
                         />
                       }
                       label="Premium"
                     />
-                    <Stack direction={'row'} spacing={2}>
+                    <FormControlLabel
+
+                      control={
+                        <Switch
+                          color="primary"
+                          name="status"
+                          checked={state.status}
+                          onChange={handleToggle}
+                        />
+                      }
+                      label="Status"
+                    />
+                    </Stack>
+                    <Stack direction={'row'} spacing={2} sx={{width:'100%',padding:0, mt: 3 }}>
                       <Button
                         className={classes.button}
                         variant="contained"
@@ -311,7 +358,7 @@ export default function EditVpnPage() {
                         Add Region
                       </Button>
                     </Stack>
-                  </Stack>
+                  
                 </form>
               </Card>
             </Grid>
@@ -319,7 +366,7 @@ export default function EditVpnPage() {
               <Card sx={{ alignItem: 'center', justifyContent: 'center', px: 2, py: 2 }}>
                 <TitleComponent title="Regions" />
                 
-                {regions.map((region, index) => {
+                {state.regions.map((region, index) => {
                   return (
                     <RegionComponent
                       region={region}
