@@ -2,7 +2,7 @@ import { Helmet } from 'react-helmet-async';
 import { filter } from 'lodash';
 import { sentenceCase } from 'change-case';
 import { useState } from 'react';
-import { getUsers } from '../repository/users';
+import { getUsers, deleteUser } from '../../repository/users';
 // @mui
 import {
   Card,
@@ -26,15 +26,18 @@ import {
   CircularProgress,
 } from '@mui/material';
 
-import { useQuery } from '@tanstack/react-query';
-import { AppWidgetSummary } from '../sections/@dashboard/app';
+import { useQuery , useMutation} from '@tanstack/react-query';
+import { AppWidgetSummary } from '../../sections/@dashboard/app';
+import useThurDate from '../../hooks/useDate';
+
 // components
-import Label from '../components/label';
-import Iconify from '../components/iconify';
+import Label from '../../components/label';
+import Iconify from '../../components/iconify';
 // import Scrollbar from '../components/scrollbar';
 // sections
-import { TableListHead, TableListToolbar } from '../components/table-component';
-
+import { TableListHead, TableListToolbar } from '../../components/table-component';
+import AlertDialog from '../../components/alert/dialogue';
+import ThurAlert from '../../components/alert/alert';
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
@@ -43,7 +46,8 @@ const TABLE_HEAD = [
   { id: 'device_id', label: 'Device ID', alignRight: false },
   { id: 'isVerified', label: 'Verified', alignRight: false },
   { id: 'status', label: 'Status', alignRight: false },
-  { id: '' },
+  { id: 'date', label: 'Date', alignRight: false },
+  
 ];
 
 // ----------------------------------------------------------------------
@@ -78,7 +82,7 @@ function applySortFilter(array, comparator, query) {
 }
 
 export default function UserPage() {
-  const { isSuccess, isFetching } = useQuery({
+  const { isSuccess, isFetching , refetch} = useQuery({
     queryKey: ['get-users'],
     queryFn: getUsers,
     onSuccess: (result) => {
@@ -86,6 +90,8 @@ export default function UserPage() {
       setUserList(result.users);
     },
   });
+  const [getDate] = useThurDate();
+
   const [USERLIST, setUserList] = useState([]);
   const [open, setOpen] = useState(null);
 
@@ -101,9 +107,11 @@ export default function UserPage() {
 
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const handleOpenMenu = (event) => {
-    setOpen(event.currentTarget);
-  };
+
+
+  const [openDelete, setOpenDelete] = useState(false);
+  const [focusUser, setFocus] = useState(null);
+  const [response, setResponse] = useState(null);
 
   const handleCloseMenu = () => {
     setOpen(null);
@@ -168,11 +176,46 @@ export default function UserPage() {
 
   const isNotFound = !filteredUsers.length && !!filterEmail;
 
+
+  const deleteUserMt = useMutation(['delete'], () => deleteUser(focusUser?._id), {
+    onSuccess: (res) => {
+      console.log(res);
+      setResponse(res);
+      setOpenDelete(false);
+      refetch().then(() => setResponse(null));
+    },
+    onError: (error) => {
+      setResponse(error);
+      setOpenDelete(false);
+    },
+  });
+
+  const handleOpenMenu = (event, vpnFocus) => {
+    setOpen(event.currentTarget);
+    setFocus(vpnFocus);
+  };
+
+  const openDialogue = () => {
+    setOpenDelete(true);
+    setOpen(false);
+  };
   return (
     <>
       <Helmet>
         <title> User | User List </title>
       </Helmet>
+
+
+      <AlertDialog
+          open={openDelete}
+          yesText={'Delete'}
+          noText={'Cancel'}
+          title="Do you want to delete?"
+          message={`Confirm to delete the ${focusUser?.email}`}
+          handleYes={() => deleteUserMt.mutate()}
+          handleNo={() => setOpenDelete(false)}
+        />
+         {response && <ThurAlert severe={response.status ? 'success' : 'error'} message={response.message} />}
 
       <Container maxWidth="xl">
         <Grid container spacing={3}>
@@ -253,7 +296,8 @@ export default function UserPage() {
                   />
                   <TableBody>
                     {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-                      const { _id: id, email, active: isVerified, devices } = row;
+                      
+                      const { _id: id, email, active: isVerified, devices, created_at } = row;
                       const status = 'active';
                       const avatarUrl = '/assets/images/avatars/avatar_0.jpg';
                       const selectedUser = selected.indexOf(email) !== -1;
@@ -284,8 +328,9 @@ export default function UserPage() {
                             <Label color={(status === 'banned' && 'error') || 'success'}>{sentenceCase(status)}</Label>
                           </TableCell>
 
+                          <TableCell align="left">{getDate(created_at)}</TableCell>
                           <TableCell align="right">
-                            <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
+                            <IconButton size="large" color="inherit" onClick={(event) => handleOpenMenu(event, row)}>
                               <Iconify icon={'eva:more-vertical-fill'} />
                             </IconButton>
                           </TableCell>
@@ -362,7 +407,7 @@ export default function UserPage() {
           Edit
         </MenuItem>
 
-        <MenuItem sx={{ color: 'error.main' }}>
+        <MenuItem sx={{ color: 'error.main' }} onClick={() => openDialogue()}>
           <Iconify icon={'eva:trash-2-outline'} sx={{ mr: 2 }} />
           Delete
         </MenuItem>

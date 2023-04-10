@@ -1,9 +1,8 @@
 import { Helmet } from 'react-helmet-async';
 import { filter } from 'lodash';
 import { useState } from 'react';
-import { getUserSubscription } from '../repository/subscription';
-import { useQuery } from '@tanstack/react-query';
-
+import { getPlanList, deletePlan } from '../../repository/plans';
+import { useQuery, useMutation } from '@tanstack/react-query';
 // @mui
 import {
   Container,
@@ -12,7 +11,6 @@ import {
   Card,
   Table,
   Paper,
-  Avatar,
   Button,
   Popover,
   MenuItem,
@@ -23,21 +21,25 @@ import {
   IconButton,
   TableContainer,
   TablePagination,
-  CircularProgress
+  CircularProgress,
 } from '@mui/material';
-import Label from '../components/label';
-import Iconify from '../components/iconify';
-
-// sections
-import { TableListHead, TableListToolbar } from '../components/table-component';
+import AlertDialog from '../../components/alert/dialogue';
+import ThurAlert from '../../components/alert/alert';
+import Label from '../../components/label';
+import Iconify from '../../components/iconify';
+import AddPlanModal from '../../components/thurcomponents/AddPlanModal';
+import { TableListHead, TableListToolbar } from '../../components/table-component';
 // mock
 
 const TABLE_HEAD = [
-  { id: 'name', label: 'Name', alignRight: false },
-  { id: 'validity', label: 'Validity', alignRight: false },
-  { id: 'price', label: 'Price', alignRight: false },
-  { id: 'date', label: 'Date', alignRight: false },
+  { id: 'title', label: 'Title', alignRight: false },
+  { id: 'description', label: 'Description', alignRight: false },
+  { id: 'price', label: 'Price($)', alignRight: false },
+  { id: 'duration', label: 'Duration', alignRight: false },
+  { id: 'deviceCount', label: 'Devices', alignRight: false },
   { id: 'status', label: 'Status', alignRight: false },
+  { id: 'iapCode', label: 'IAP Code', alignRight: false },
+  { id: 'created_at', label: 'Date', alignRight: false },
   { id: '' },
 ];
 
@@ -58,7 +60,6 @@ function getComparator(order, orderBy) {
 }
 
 function applySortFilter(array, comparator, query) {
-  console.log('arraycv', array);
   const stabilizedThis = array.map((el, index) => [el, index]);
   stabilizedThis.sort((a, b) => {
     const order = comparator(a[0], b[0]);
@@ -71,21 +72,20 @@ function applySortFilter(array, comparator, query) {
   return stabilizedThis.map((el) => el[0]);
 }
 
+export default function PlansPage() {
+  const [open, setOpen] = useState(null);
+  const [PLANLIST, setPlanList] = useState([]);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [focusPlan, setFocus] = useState(null);
+  const [response, setResponse] = useState(null);
 
-
-
-export default function ProductsPage() {
-
-  const { isSuccess, isFetching } = useQuery({
-    queryKey: ['get-subscribers'],
-    queryFn: getUserSubscription,
+  const { isSuccess, isFetching, refetch } = useQuery({
+    queryKey: ['get-plans'],
+    queryFn: getPlanList,
     onSuccess: (result) => {
-      console.log('data', result);
-      setSubscription(result.purchases);
+      setPlanList(result.plans);
     },
   });
-
-  const [open, setOpen] = useState(null);
 
   const [page, setPage] = useState(0);
 
@@ -95,15 +95,11 @@ export default function ProductsPage() {
 
   const [orderBy, setOrderBy] = useState('name');
 
-  const [filterName, setFilterName] = useState('');
+  const [filterTitle, setFilterTitle] = useState('');
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  const [subscriptions, setSubscription] = useState([]);
-
-  const handleOpenMenu = (event) => {
-    setOpen(event.currentTarget);
-  };
+  const [openEdit, setOpenEdit] = useState(false);
 
   const handleCloseMenu = () => {
     setOpen(null);
@@ -148,35 +144,74 @@ export default function ProductsPage() {
     setRowsPerPage(parseInt(event.target.value, 10));
   };
 
-  const handleFilterByName = (event) => {
+  const handleFilterByProp = (event) => {
     setPage(0);
-    setFilterName(event.target.value);
+    setFilterTitle(event.target.value);
   };
 
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - [].length) : 0;
 
-  console.log('subscriptionIHHHBVUJV', subscriptions);
+  const filteredPlans = applySortFilter(PLANLIST, getComparator(order, orderBy), filterTitle);
 
-  const filteredUsers = applySortFilter(subscriptions, getComparator(order, orderBy), filterName);
+  const isNotFound = !filteredPlans.length && !!filterTitle;
 
-  const isNotFound = !filteredUsers.length && !!filterName;
+  const deletePlanMt = useMutation(['delete'], () => deletePlan(focusPlan?._id), {
+    onSuccess: (res) => {
+      setResponse(res);
+      setOpenDelete(false);
+      refetch().then(() => setResponse(null));
+    },
+    onError: (error) => {
+      setResponse(error);
+      setOpenDelete(false);
+    },
+  });
 
+  const handleOpenMenu = (event, planFocus) => {
+    setOpen(event.currentTarget);
+    setFocus(planFocus);
+  };
+
+  const openDialogue = () => {
+    setOpenDelete(true);
+    setOpen(false);
+  };
+
+  // const editPlan = (edit)=>{
+  //   setOpenEdit(true);
+
+  // }
+  const createEditPlan = (create = false) => {
+    if (create) setFocus(null);
+    setOpen(false);
+    setOpenEdit(true);
+  };
   return (
     <>
       <Helmet>
-        <title> Dashboard: Subscription </title>
+        <title> Dashboard: Plans </title>
       </Helmet>
 
+      <AddPlanModal plan={focusPlan} open={openEdit} handleModalClose={() => setOpenEdit(false)} />
       <Container maxWidth="xl">
-        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
-          <Typography variant="h4" sx={{ mb: 5 }}>
-            SUBSCRIPTIONS
-          </Typography>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
+          <Typography variant="h4">Plans</Typography>
 
-          <Button variant="contained" startIcon={<Iconify icon="eva:plus-fill" />}>
-            Create
+          <Button variant="contained" startIcon={<Iconify icon="eva:plus-fill" />} onClick={() => createEditPlan(true)}>
+            New Plan
           </Button>
         </Stack>
+
+        <AlertDialog
+          open={openDelete}
+          yesText={'Delete'}
+          noText={'Cancel'}
+          title="Do you want to delete?"
+          message={`Confirm to delete the ${focusPlan?.title}`}
+          handleYes={() => deletePlanMt.mutate()}
+          handleNo={() => setOpenDelete(false)}
+        />
+        {response && <ThurAlert severe={response.status ? 'success' : 'error'} message={response.message} />}
 
         {isFetching && (
           <Container sx={{ display: 'flex', justifyContent: 'center', alignContent: 'center', mx: 'auto' }}>
@@ -184,56 +219,63 @@ export default function ProductsPage() {
             <CircularProgress color="success" sx={{ margin: 'auto' }} />{' '}
           </Container>
         )}
-
         {isSuccess && (
-        <Card>
-          <TableListToolbar numSelected={selected.length} filterName={filterName} onFilterName={handleFilterByName} />
+          <Card>
+            <TableListToolbar
+              numSelected={selected.length}
+              filterProp={filterTitle}
+              onFilterProp={handleFilterByProp}
+            />
 
-          
             <TableContainer sx={{ minWidth: 800 }}>
               <Table>
                 <TableListHead
                   order={order}
                   orderBy={orderBy}
                   headLabel={TABLE_HEAD}
-                  rowCount={subscriptions.length}
+                  rowCount={PLANLIST.length}
                   numSelected={selected.length}
                   onRequestSort={handleRequestSort}
                   onSelectAllClick={handleSelectAllClick}
                 />
                 <TableBody>
-                  {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-                    const { _id:id, plan_id, user_id, active, } = row;
-                    const name = user_id?.email;
-                    const selectedUser = selected.indexOf(name) !== -1;
+                  {filteredPlans.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
+                    const { _id: id, title, description, deviceCount, duration, iapCode, price, active } = row;
+                    const selectedUser = selected.indexOf(title) !== -1;
 
                     return (
                       <TableRow hover key={id} tabIndex={-1} role="checkbox" selected={selectedUser}>
                         <TableCell padding="checkbox">
-                          <Checkbox checked={selectedUser} onChange={(event) => handleClick(event, name)} />
+                          <Checkbox checked={selectedUser} onChange={(event) => handleClick(event, title)} />
                         </TableCell>
 
                         <TableCell component="th" scope="row" padding="none">
                           <Stack direction="row" alignItems="center" spacing={2}>
-                            <Avatar alt={name} src={''} />
+                            {/* <Avatar alt={title} src={''} /> */}
                             <Typography variant="subtitle2" noWrap>
-                              {name}
+                              {title}
                             </Typography>
                           </Stack>
                         </TableCell>
 
-                        <TableCell align="left">{plan_id.title}</TableCell>
-
-                        <TableCell align="left">{plan_id.price}</TableCell>
-
-                        <TableCell align="left">{active ? 'Yes' : 'No'}</TableCell>
-
                         <TableCell align="left">
-                          <Label color={active === false?'error' : 'success'}>Status</Label>
+                          {description.length > 30 ? description.substr(0, 30) : description}
                         </TableCell>
 
+                        <TableCell align="left">{price}</TableCell>
+
+                        <TableCell align="left">{duration}</TableCell>
+
+                        <TableCell align="left">{deviceCount}</TableCell>
+                        <TableCell align="left">
+                          <Label color={(active == false && 'error') || 'success'}>
+                            {active ? 'Active' : 'Inactive'}
+                          </Label>
+                        </TableCell>
+
+                        <TableCell align="left">{iapCode}</TableCell>
                         <TableCell align="right">
-                          <IconButton size="large" color="inherit" onClick={handleOpenMenu}>
+                          <IconButton size="large" color="inherit" onClick={(event) => handleOpenMenu(event, row)}>
                             <Iconify icon={'eva:more-vertical-fill'} />
                           </IconButton>
                         </TableCell>
@@ -262,7 +304,7 @@ export default function ProductsPage() {
 
                           <Typography variant="body2">
                             No results found for &nbsp;
-                            <strong>&quot;{filterName}&quot;</strong>.
+                            <strong>&quot;{filterTitle}&quot;</strong>.
                             <br /> Try checking for typos or using complete words.
                           </Typography>
                         </Paper>
@@ -272,18 +314,17 @@ export default function ProductsPage() {
                 )}
               </Table>
             </TableContainer>
-          
 
-          <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={[].length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
-        </Card>
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25]}
+              component="div"
+              count={[].length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
+          </Card>
         )}
       </Container>
 
@@ -305,12 +346,12 @@ export default function ProductsPage() {
           },
         }}
       >
-        <MenuItem>
+        <MenuItem onClick={() => createEditPlan()}>
           <Iconify icon={'eva:edit-fill'} sx={{ mr: 2 }} />
           Edit
         </MenuItem>
 
-        <MenuItem sx={{ color: 'error.main' }}>
+        <MenuItem sx={{ color: 'error.main' }} onClick={() => openDialogue()}>
           <Iconify icon={'eva:trash-2-outline'} sx={{ mr: 2 }} />
           Delete
         </MenuItem>

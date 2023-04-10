@@ -32,3 +32,15 @@ export const getUsers = async () => {
   }
 };
 
+
+export const deleteUser = async(id)=>{
+  try{
+    
+    const res = await connect().delete(`users/delete/${id}`);
+    return handler(res);
+
+  }catch(e){
+    return errorHandler(e)
+  }
+}
+

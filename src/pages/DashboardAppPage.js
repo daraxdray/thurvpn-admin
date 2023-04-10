@@ -18,9 +18,10 @@ export default function DashboardAppPage() {
   const [totalUsers, setTotalUsers] = useState(0);
   const [totalSubs, setSubs] = useState(0);
   const [totalPlans, setTotalPlans] = useState(0);
+  const [totalDevices, setTotalDevices] = useState(0);
 
   const { isSuccess, isFetching } = useQuery({
-    queryKey: ['get-users'],
+    queryKey: ['get-dashboard'],
     queryFn: getDashboardData,
     onSuccess: (result) => {
       console.log('data', result);
@@ -30,6 +31,7 @@ export default function DashboardAppPage() {
       setSubs(result.subscriptions);
       setTotalVpn(result.totalVpn);
       setTotalUsers(result.totalUsers);
+      setTotalDevices(result.totalDevices);
     },
   });
 
@@ -96,10 +98,10 @@ export default function DashboardAppPage() {
             <Grid item xs={12} md={6} lg={8}>
               <ListTile
                 title="Recently joined devices"
-                list={[...Array(5)].map((_, index) => ({
-                  id: faker.datatype.uuid(),
-                  title: `IOS ${13 + index}, Iphone 13`,
-                  description: 'Red323x45345Fhghsdfs',
+                list={[...totalDevices].splice(0,5).map((device, index) => ({
+                  id: index,
+                  title: device.deviceName,
+                  description: device.deviceId,
                   image: `/assets/images/covers/cover_${index + 1}.jpg`,
                   postedAt: faker.date.recent(),
                 }))}

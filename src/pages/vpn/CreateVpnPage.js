@@ -12,7 +12,7 @@ import {
   // Box,
   Grid,
 } from '@mui/material';
-import { useState } from 'react';
+import { useState, useReducer } from 'react';
 import {SectionTitle, TitleComponent, RegionComponent } from 'src/components/thurcomponents/index';
 import { createVPN } from '../../repository/vpn';
 import ThurAlert from '../../components/alert/alert';
@@ -55,15 +55,6 @@ const classes = {
   },
 };
 
-const initialFormData = {
-  country: '',
-  image: '',
-  code: '',
-  premium: false,
-  unicode: '',
-  regions:[]
-};
-
 const initialRegionData = {
   regionName: '',
   slug: '',
@@ -74,42 +65,82 @@ const initialRegionData = {
   filePath: '',
 };
 
+const initState = {
+  country: '',
+  image: '',
+  code: '',
+  premium: false,
+  unicode: '',
+  regions: [],
+  status: true,
+  activeRegion: initialRegionData,
+};
+const reducer = (state, action) => {
+  switch (action.type) {
+    case 'SET_FORM_DATA':
+      return {
+        ...state,
+        ...action.payload,
+      };
+    case 'ADD_REGION':
+      return {
+        ...state,
+        regions: [...state.regions, action.payload],
+      };
+    case 'REMOVE_REGION':
+      // const regs = state.regions.splice(action.payload, 1);
+      return {
+        ...state,
+        regions: [...action.payload],
+      };
+    case 'UPDATE_REGION':
+      // console.log(state.regions);
+      return {
+        ...state,
+        regions: [...action.payload],
+      };
+    default:
+      return;
+  }
+};
+// const operationState = {
+
 export default function CreateVpnPage() {
-  const [formData, setFormData] = useState(initialFormData);
+  const [state, dispatch] = useReducer(reducer, initState);
   const [regionData, setRegionData] = useState(initialRegionData);
   const [open, setOpen] = useState(false);
   const [enabled, setEnabled] = useState(true);
   const [response, setResponse] = useState(null);
-  const [regions, setRegions] = useState([]);
+  
+  const [updateRegion, setUpdateRegion] = useState(false);
+  const [rIndex, setRegionIndex] = useState(0);
+
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
-    setEnabled(false)
-    setFormData({...formData,regions: regions})
-    console.log(formData)
-    createVPN(formData).then((res)=>{
-      setFormData(initialFormData)
-      setRegions([])
-      handleResponse(res)
-    }).catch((e)=>{
-      console.log("error",e);
-      handleResponse(e)
-    })
-
+    setEnabled(false);
+    console.log(state);
+    createVPN(state)
+      .then((res) => {
+        handleResponse(res);
+      })
+      .catch((e) => {
+        console.log('error', e);
+        handleResponse(e);
+      });
   };
 
-  const handleResponse = (res)=>{
+  const handleResponse = (res) => {
     setResponse(res);
-    setEnabled(true)
-
-  }
+    setEnabled(true);
+  };
 
   const handleFormChange = (event) => {
-    setFormData({
-      ...formData,
-      [event.target.name]: event.target.value,
-    });
+    
+    dispatch({ type: 'SET_FORM_DATA', payload: { [event.target.name]: event.target.value } });
+    console.log(state.country);
   };
+
   const handleRegionFormChange = (event) => {
     setRegionData({
       ...regionData,
@@ -117,11 +148,9 @@ export default function CreateVpnPage() {
     });
   };
 
-  const handlePremiumToggle = (event) => {
-    setFormData({
-      ...formData,
-      premium: event.target.checked,
-    });
+  const handleToggle = (event) => {
+
+    dispatch({ type: 'SET_FORM_DATA', payload: { [event.target.name]: event.target.checked } });
   };
 
   const handleAddRegionClick = () => {
@@ -132,22 +161,36 @@ export default function CreateVpnPage() {
     setOpen(false);
   };
 
-  const AddRegionToList = () => {
-    const rg = [];
-    rg.push(regionData);
-    setRegions([...regions, ...rg]);
+  const AddRegionToList = (event) => {
+    event.preventDefault();
+    dispatch({ type: 'ADD_REGION', payload: regionData });
     setOpen(false);
-    setRegionData(initialRegionData)
+  };
+
+  const updateRegionToList = (event) => {
+    event.preventDefault();
+    const modify = state.regions;
+    modify[rIndex] = regionData;
+
+    dispatch({ type: 'UPDATE_REGION', payload: modify,});
+    setOpen(false);
+    // setRegionData(initialRegionData);
+    setUpdateRegion(false);
   };
 
   //removes region from list
   const removeIndex = (index) => {
-    console.log(regions.length);
-    regions.splice(index, 1);
-    console.log(index, regions.length);
-    setRegions([...regions]);
+    const rg = state.regions;
+    rg.splice(index, 1);
+    dispatch({ type: 'REMOVE_REGION', payload: rg });
   };
 
+  const editRegion = (index) => {
+    setUpdateRegion(true);
+    setRegionData(state.regions[index]);
+    setRegionIndex(index);
+    setOpen(true);
+  };
   return (
     <>
       <Helmet>
@@ -170,7 +213,7 @@ export default function CreateVpnPage() {
                       className={classes.textField}
                       label="Country"
                       name="country"
-                      value={formData.country}
+                      value={state.country}
                       onChange={handleFormChange}
                       required
                       variant="standard"
@@ -179,7 +222,7 @@ export default function CreateVpnPage() {
                       className={classes.textField}
                       label="Country Code"
                       name="code"
-                      value={formData.code}
+                      value={state.code}
                       onChange={handleFormChange}
                       required
                       variant="standard"
@@ -190,7 +233,7 @@ export default function CreateVpnPage() {
                       className={classes.textField}
                       label="Image URL"
                       name="image"
-                      value={formData.image}
+                      value={state.image}
                       onChange={handleFormChange}
                       required
                       variant="standard"
@@ -199,23 +242,24 @@ export default function CreateVpnPage() {
                       className={classes.textField}
                       label="Unicode"
                       name="unicode"
-                      value={formData.unicode}
+                      value={state.unicode}
                       onChange={handleFormChange}
                       required
                       variant="standard"
                     />
                   </Stack>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        color="primary"
-                        name="premium"
-                        checked={formData.premium}
-                        onChange={handlePremiumToggle}
-                      />
-                    }
-                    label="Premium"
-                  />
+                  <Stack direction={'row'} spacing={6} sx={{ padding: 0, width: '100%', mb: 3 }}>
+                    <FormControlLabel
+                      control={
+                        <Switch color="primary" name="premium" checked={state.premium} onChange={handleToggle} />
+                      }
+                      label="Premium"
+                    />
+                    <FormControlLabel
+                      control={<Switch color="primary" name="status" checked={state.status} onChange={handleToggle} />}
+                      label="Status"
+                    />
+                  </Stack>
                   <Stack direction={'row'} spacing={2}>
                     <Button className={classes.button} variant="contained" color="primary" type="submit" disabled={!enabled}>
                       Submit
@@ -233,12 +277,21 @@ export default function CreateVpnPage() {
               </form>
             </Card>
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={10}>
             <Card sx={{ alignItem: 'center', justifyContent: 'center', px: 5, py: 2 }}>
               <TitleComponent title="Regions" />
-              {regions.map((region, index) => {
-                return <RegionComponent region={region} key={index} onDelete={() => removeIndex(index)} />;
-              })}
+              {state.regions.map((region, index) => {
+                  return (
+                    <RegionComponent
+                      region={region}
+                      key={index}
+                      onDelete={() => removeIndex(index)}
+                      onEdit={() => {
+                        editRegion(index);
+                      }}
+                    />
+                  );
+                })}
             </Card>
           </Grid>
         </Grid>
@@ -276,6 +329,7 @@ export default function CreateVpnPage() {
               mt={5}
               sx={{ backgroundColor: 'white' }}
             >
+              <form onSubmit={updateRegion ? updateRegionToList : AddRegionToList}>
               <Stack direction={'column'} spacing={3}>
                 <Stack direction={'row'} spacing={2}>
                   <TextField
@@ -353,7 +407,9 @@ export default function CreateVpnPage() {
                   </Button>
                 </Stack>
               </Stack>
+              </form>
             </Stack>
+            
           </Card>
         </Modal>
       </Container>

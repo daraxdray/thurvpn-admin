@@ -13,3 +13,15 @@ export const getUserSubscription = async () => {
     return errorHandler(e);
   }
 };
+
+
+export const deleteSub = async(id)=>{
+  try{
+    
+    const res = await connect().delete(`purchases/delete/${id}`);
+    return handler(res);
+
+  }catch(e){
+    return errorHandler(e)
+  }
+}

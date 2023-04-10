@@ -4,11 +4,11 @@ import DashboardLayout from './layouts/dashboard';
 import SimpleLayout from './layouts/simple';
 //
 
-import UserPage from './pages/UserPage';
+import UserPage from './pages/users/UserPage';
 import LoginPage from './pages/LoginPage';
 import Page404 from './pages/Page404';
-import PlansPage from './pages/PlansPage';
-import SubscriptionPage from './pages/SubscriptionPage';
+import PlansPage from './pages/plans/PlansPage';
+import SubscriptionPage from './pages/subscriptions/SubscriptionPage';
 import DashboardAppPage from './pages/DashboardAppPage';
 import RequireAuth from './layouts/RequireAuth';
 import { CreateVpnPage, EditVpnPage, VpnPage, VPNListPage } from './pages/vpn/index.js';
