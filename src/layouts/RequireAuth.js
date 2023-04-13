@@ -4,9 +4,9 @@ import { useSelector } from 'react-redux';
 const RequireAuth = ({children}) => {
   const auth = useSelector((state) => state.auth.value)
   const location = useLocation();
-  
+  const userId = localStorage.getItem('uid');
 
-  return <>{auth?.user ?
+  return <>{(auth?.user ?? userId)?
     children :
      <Navigate to={ROUTEPATH.login} state={{ from: location }} replace />}</>;
 };

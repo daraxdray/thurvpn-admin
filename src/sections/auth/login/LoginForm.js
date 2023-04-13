@@ -41,14 +41,13 @@ export default function LoginForm() {
     try {
       const loggedIn = await adminLogin(email, password);
 
-      console.log("loggedIn", loggedIn)
+      
       if (loggedIn.status) {
         // Set the authorization header with the token
         // axios.defaults.headers.common['Authorization'] = `Bearer ${loggedIn.data.jwt}`;
         // Dispatch the user data to Redux store
         dispatch(loginUserIn(loggedIn.data))
-        
-        navigate(from ?? '/dashboard/app', { replace: true });
+        navigate(from != '/'? from : '/dashboard/app', { replace: true });
         
       }
       setResponse(loggedIn);
